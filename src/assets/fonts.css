@@ -1,0 +1,76 @@
+/* Import all required fonts from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Italiana&family=Istok+Web:ital,wght@0,400;0,700;1,400;1,700&family=Josefin+Slab:ital,wght@0,400;0,700;1,400;1,700&family=Kaushan+Script&family=Inter:ital,wght@0,400;0,700;1,400;1,700&family=JejuHallasan&display=swap');
+
+/* Global body font — Inter for readability */
+body {
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #222;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* === Font Assignments === */
+
+/* Italiana → Titles */
+.title, h1, h2, h3 {
+    font-family: 'Italiana', 'Times New Roman', serif;
+    font-weight: 700;
+}
+
+/* Inter → General Body / Content */
+.content, p, li, span {
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 1rem;
+}
+
+/* Istok Web → About Us Title */
+.about-us-title {
+    font-family: 'Istok Web', Arial, sans-serif;
+    font-weight: 700;
+    font-size: 32px;
+    margin-top: 0;
+}
+
+/* Josefin Slab → About Us Body */
+.about-us-body {
+    font-family: 'Josefin Slab', Georgia, serif;
+    font-size: 24px;
+}
+
+/* Kaushan Script → About Us Title 2 */
+.about-us-title2 {
+    font-family: 'Kaushan Script', 'Brush Script MT', cursive;
+    font-size: 24px;
+}
+
+/* Jeju Hallasan → Quotes */
+.quote {
+    font-family: 'JejuHallasan', 'Comic Sans MS', cursive;
+    font-size: 1.4rem;
+    font-style: italic;
+}
+
+/* === Optional: Common text variations === */
+
+strong, b {
+    font-weight: 700;
+}
+
+em, i {
+    font-style: italic;
+}
+
+/* Responsive scaling for titles */
+@media (max-width: 768px) {
+    .title, h1, h2, h3 {
+        font-size: 1.6rem;
+    }
+    .about-us-title,
+    .about-us-title2 {
+        font-size: 1.3rem;
+    }
+}
