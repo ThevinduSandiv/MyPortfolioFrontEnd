@@ -19,21 +19,50 @@
   --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
   --vt-c-text-dark-1: var(--vt-c-white);
   --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
+
+  /* Cream color palette - available everywhere */
+  --bg-color-primary: #FCF6EF;
+  --bg-color-secondary: #F9E9D9;
+  --text-color: #483F37;
+  --heading-color: #382E28;
+  --link-color: var(--vt-c-indigo);
+  --border-color: #382E28;
 }
 
 /* semantic color variables for this project */
 :root {
-  --color-background: var(--vt-c-white);
-  --color-background-soft: var(--vt-c-white-soft);
-  --color-background-mute: var(--vt-c-white-mute);
+  --color-background: var(--bg-color-primary); /* Use cream as default */
+  --color-background-soft: var(--bg-color-secondary); /* Use secondary cream */
+  --color-background-mute: #f2e6d9; /* A slightly darker cream */
 
   --color-border: var(--vt-c-divider-light-2);
   --color-border-hover: var(--vt-c-divider-light-1);
 
-  --color-heading: var(--vt-c-text-light-1);
-  --color-text: var(--vt-c-text-light-1);
+  --color-heading: var(--heading-color); /* Use brown heading */
+  --color-text: var(--text-color); /* Use brown text */
 
   --section-gap: 160px;
+
+  /* Button Colors - Light Theme */
+  --btn-primary: var(--vt-c-indigo);
+  --btn-primary-hover: #1a365d;
+  --btn-primary-text: var(--vt-c-white);
+
+  --btn-secondary: var(--vt-c-divider-light-2);
+  --btn-secondary-hover: var(--vt-c-divider-light-1);
+  --btn-secondary-text: var(--text-color); /* Use brown text */
+
+  --btn-success: #10b981;
+  --btn-success-hover: #059669;
+  --btn-success-text: var(--vt-c-white);
+
+  --btn-warning: #f59e0b;
+  --btn-warning-hover: #d97706;
+  --btn-warning-text: var(--vt-c-white);
+
+  --btn-danger: #ef4444;
+  --btn-danger-hover: #dc2626;
+  --btn-danger-text: var(--vt-c-white);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -47,7 +76,120 @@
 
     --color-heading: var(--vt-c-text-dark-1);
     --color-text: var(--vt-c-text-dark-2);
+
+    /* Button Colors - Dark Theme */
+    --btn-primary: #60a5fa;
+    --btn-primary-hover: #3b82f6;
+    --btn-primary-text: var(--vt-c-black);
+
+    --btn-secondary: var(--vt-c-divider-dark-2);
+    --btn-secondary-hover: var(--vt-c-divider-dark-1);
+    --btn-secondary-text: var(--vt-c-text-dark-1);
+
+    --btn-success: #34d399;
+    --btn-success-hover: #10b981;
+    --btn-success-text: var(--vt-c-black);
+
+    --btn-warning: #fbbf24;
+    --btn-warning-hover: #f59e0b;
+    --btn-warning-text: var(--vt-c-black);
+
+    --btn-danger: #f87171;
+    --btn-danger-hover: #ef4444;
+    --btn-danger-text: var(--vt-c-black);
   }
+}
+
+/* Manual theme override - DARK THEME */
+[data-theme="dark"] {
+  --color-background: var(--vt-c-black);
+  --color-background-soft: var(--vt-c-black-soft);
+  --color-background-mute: var(--vt-c-black-mute);
+
+  --color-border: var(--vt-c-divider-dark-2);
+  --color-border-hover: var(--vt-c-divider-dark-1);
+
+  --color-heading: var(--vt-c-text-dark-1);
+  --color-text: var(--vt-c-text-dark-2);
+
+  /* Button Colors - Dark Theme */
+  --btn-title: #382E28FF;
+  --btn-primary: #F2B689FF;
+  --btn-active: #EE9152FF;
+  --btn-primary-hover: #3b82f6;
+  --btn-primary-text: var(--vt-c-black);
+
+  --btn-secondary: var(--vt-c-divider-dark-2);
+  --btn-secondary-hover: var(--vt-c-divider-dark-1);
+  --btn-secondary-text: var(--vt-c-text-dark-1);
+
+  --btn-success: #34d399;
+  --btn-success-hover: #10b981;
+  --btn-success-text: var(--vt-c-black);
+
+  --btn-warning: #fbbf24;
+  --btn-warning-hover: #f59e0b;
+  --btn-warning-text: var(--vt-c-black);
+
+  --btn-danger: #f87171;
+  --btn-danger-hover: #ef4444;
+  --btn-danger-text: var(--vt-c-black);
+}
+
+/* Manual theme override - LIGHT THEME (Cream colors) */
+[data-theme="light"] {
+  --color-background: var(--bg-color-primary); /* Cream background */
+  --color-background-soft: var(--bg-color-secondary); /* Secondary cream */
+  --color-background-mute: #f2e6d9; /* Darker cream */
+
+  --color-border: var(--border-color); /* Brown border */
+  --color-border-hover: #2a211a; /* Darker brown */
+
+  --color-heading: var(--heading-color); /* Brown heading */
+  --color-text: var(--text-color); /* Brown text */
+
+  /* Button Colors - Light Theme (adjusted for cream background) */
+  --btn-title: #382E28FF;
+  --btn-primary: #F2B689FF;
+  --btn-active: #EE9152FF;
+  --btn-primary-hover: #3b82f6;
+  --btn-primary-text: var(--vt-c-black);
+  --btn-secondary: rgba(56, 46, 40, 0.1); /* Light brown transparent */
+  --btn-secondary-hover: rgba(56, 46, 40, 0.2);
+  --btn-secondary-text: var(--heading-color);
+
+  --btn-success: #10b981;
+  --btn-success-hover: #059669;
+  --btn-success-text: var(--vt-c-white);
+
+  --btn-warning: #f59e0b;
+  --btn-warning-hover: #d97706;
+  --btn-warning-text: var(--vt-c-white);
+
+  --btn-danger: #ef4444;
+  --btn-danger-hover: #dc2626;
+  --btn-danger-text: var(--vt-c-white);
+}
+
+/* Utility classes for direct cream color usage */
+.bg-primary {
+  background-color: var(--bg-color-primary) !important;
+}
+
+.bg-secondary {
+  background-color: var(--bg-color-secondary) !important;
+}
+
+.text-brown {
+  color: var(--text-color) !important;
+}
+
+.heading-brown {
+  color: var(--heading-color) !important;
+}
+
+.border-brown {
+  border-color: var(--border-color) !important;
 }
 
 *,
@@ -63,22 +205,22 @@ body {
   color: var(--color-text);
   background: var(--color-background);
   transition:
-    color 0.5s,
-    background-color 0.5s;
+          color 0.5s,
+          background-color 0.5s;
   line-height: 1.6;
   font-family:
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    'Fira Sans',
-    'Droid Sans',
-    'Helvetica Neue',
-    sans-serif;
+          Inter,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Roboto,
+          Oxygen,
+          Ubuntu,
+          Cantarell,
+          'Fira Sans',
+          'Droid Sans',
+          'Helvetica Neue',
+          sans-serif;
   font-size: 15px;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;

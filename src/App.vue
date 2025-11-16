@@ -1,42 +1,54 @@
 <template>
-  <div class="p-4 bg-white">
-    <h2>PrimeVue Test Page</h2>
+  <div class="bg-white">
 
-    <!-- Buttons -->
-    <div class="mb-4">
-      <Button label="Primary" class="p-button-primary mr-2" />
-      <Button label="Secondary" class="p-button-secondary mr-2" />
-      <Button label="Success" class="p-button-success mr-2" />
+    <div class="flex flex-row bg-primary justify-between p-3">
+      <p class="text-2xl"> Thevindu Hennayake </p>
+      <ThemeToggle/>
     </div>
+    <NavigationSection
+        :pages="pages"
+        :specialPages="specialPages"
+        @pageSelected="handlePageSelection"
+    />
+    <div class="p-4 bg-white">
+      <h2>PrimeVue Test Page</h2>
 
-    <!-- Input -->
-    <div class="mb-4">
-      <InputText v-model="textValue" placeholder="Type something..." />
-      <p>Value: {{ textValue }}</p>
-    </div>
+      <!-- Buttons -->
+      <div class="mb-4">
+        <Button label="Primary" class="p-button-primary mr-2" />
+        <Button label="Secondary" class="p-button-secondary mr-2" />
+        <Button label="Success" class="p-button-success mr-2" />
+      </div>
 
-    <!-- Checkbox -->
-    <div class="mb-4">
-      <Checkbox v-model="checked" :binary="true" />
-      <label class="ml-2">Checkbox: {{ checked }}</label>
-    </div>
+      <!-- Input -->
+      <div class="mb-4">
+        <InputText v-model="textValue" placeholder="Type something..." />
+        <p>Value: {{ textValue }}</p>
+      </div>
 
-    <!-- Dropdown -->
-    <div class="mb-4">
-      <Dropdown
-          v-model="selectedCity"
-          :options="cities"
-          optionLabel="name"
-          placeholder="Select a City"
-      />
-      <p>Selected: {{ selectedCity }}</p>
-    </div>
+      <!-- Checkbox -->
+      <div class="mb-4">
+        <Checkbox v-model="checked" :binary="true" />
+        <label class="ml-2">Checkbox: {{ checked }}</label>
+      </div>
 
-    <!-- Grid Test -->
-    <div class="grid grid-cols-3 gap-4 mb-6">
-      <div class="bg-green-400 p-4 rounded text-white text-center">1</div>
-      <div class="bg-yellow-400 p-4 rounded text-white text-center">2</div>
-      <div class="bg-blue-400 p-4 rounded text-white text-center">3</div>
+      <!-- Dropdown -->
+      <div class="mb-4">
+        <Dropdown
+            v-model="selectedCity"
+            :options="cities"
+            optionLabel="name"
+            placeholder="Select a City"
+        />
+        <p>Selected: {{ selectedCity }}</p>
+      </div>
+
+      <!-- Grid Test -->
+      <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="bg-green-400 p-4 rounded text-white text-center">1</div>
+        <div class="bg-yellow-400 p-4 rounded text-white text-center">2</div>
+        <div class="bg-blue-400 p-4 rounded text-white text-center">3</div>
+      </div>
     </div>
   </div>
 </template>
@@ -47,6 +59,8 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Checkbox from 'primevue/checkbox';
 import Dropdown from 'primevue/dropdown';
+import ThemeToggle from "@/components/ThemeToggle.vue";
+import NavigationSection from "@/components/NavigationSection.vue";
 
 const textValue = ref('');
 const checked = ref(false);
@@ -56,6 +70,24 @@ const cities = ref([
   { name: 'London', code: 'LDN' },
   { name: 'Paris', code: 'PRS' }
 ]);
+
+const pages = [
+  { id: 1, label: "Home" },
+  { id: 2, label: "About" },
+  { id: 3, label: "Projects" },
+  { id: 4, label: "Experience" },
+  { id: 5, label: "Contact" }
+];
+
+const specialPages = [
+  { id: 6, label: "Aviation Adventure" }
+];
+
+const selectedPage = ref("Home");
+
+const handlePageSelection = (page) => {
+  selectedPage.value = page;
+};
 </script>
 
 <style scoped>
