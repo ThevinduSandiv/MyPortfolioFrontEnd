@@ -49,7 +49,7 @@ const props = defineProps({
 // Define emit for selected page
 const emit = defineEmits(['pageSelected']);
 
-const selectedPage = ref(null);
+const selectedPage = ref(props.pages[0]);
 
 // Method to handle page selection
 const selectPage = (page) => {
