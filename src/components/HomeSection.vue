@@ -13,7 +13,7 @@
       <div class="h-[100px] w-full flex flex-row gap-5 items-center">
 
         <card
-            v-if="projectsLoaded===true"
+            v-if="projectsLoaded === true"
             v-for="project in projects"
             class="zoom-hover h-full w-[20%] flex items-center justify-center bg-secondary p-2 border-2 border-brown rounded-lg"
             @click="openProject(project.id)"
@@ -27,10 +27,13 @@
         </div>
 
         <Button
+            v-if="projectsLoaded === false || projects.length > 0"
             icon="pi pi-chevron-right"
             class="zoom-hover ms-24 p-button-rounded p-button-text !bg-[var(--btn-primary)] !text-[var(--btn-title)]"
             @click="viewAllProjects"
         />
+
+        <p v-else class="p-24 text-gray-400"> No Projects Found </p>
 
       </div>
 
@@ -42,20 +45,27 @@
 
       <div class="h-[100px] w-full flex flex-row gap-5 items-center">
 
-        <div v-if="achievementsLoaded===true" v-for="achievement in achievements" class="h-full w-[20%] bg-secondary">
+        <card
+            v-if="achievementsLoaded === true"
+            v-for="achievement in achievements"
+            class="zoom-hover h-full w-[20%] flex items-center justify-center bg-secondary p-2 border-2 border-brown rounded-lg"
+            @click="openAchievement()"
+        >
 
-          test
 
-        </div>
+        </card>
 
         <div v-else v-for="n in 3" :key="n" class="h-full w-[20%] skeleton-wave bg-gray-500 rounded overflow-hidden relative">
         </div>
 
         <Button
+            v-if="achievementsLoaded === false || achievements.length > 0"
             icon="pi pi-chevron-right"
             class="zoom-hover ms-24 p-button-rounded p-button-text !bg-[var(--btn-primary)] !text-[var(--btn-title)]"
             @click="viewAllAchievements"
         />
+
+        <p v-else class="p-24 text-gray-400"> No Achievements Found </p>
 
       </div>
 
@@ -75,7 +85,7 @@ onMounted(() => {
 const emit = defineEmits(['pageSelected']);
 
 const projectsLoaded = ref(true);
-const achievementsLoaded = ref(false);
+const achievementsLoaded = ref(true);
 const topSkills = ref(["Java", "C", "Python"]);
 const skillStr = ref("");
 const projects = ref([
@@ -111,7 +121,13 @@ function viewAllAchievements() {
 }
 
 function openProject(projectId) {
+
 }
+
+function openAchievement() {
+
+}
+
 
 </script>
 
