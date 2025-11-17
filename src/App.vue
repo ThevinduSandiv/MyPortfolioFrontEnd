@@ -13,8 +13,8 @@
     />
 
 
-    <div class="flex-1 content-area">
-      <component :is="currentComponent" />
+    <div class="flex-1 flex flex-col min-h-0">
+      <component :is="currentComponent" class="flex-1" />
     </div>
 
 
@@ -29,6 +29,7 @@ import NavigationSection from "@/components/NavigationSection.vue";
 import FooterSection from "@/components/FooterSection.vue";
 
 import ComingSoon from "@/components/ComingSoon.vue";
+import Home from "@/components/HomeSection.vue";
 
 
 const pages = [
@@ -54,7 +55,7 @@ const currentComponent = computed(() => {
 
   switch (selectedPage.value.label) {
     case "Home":
-      return ComingSoon;
+      return Home;
     case "About":
       return ComingSoon;
     case "Projects":
