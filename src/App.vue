@@ -7,6 +7,7 @@
     </div>
 
     <NavigationSection
+        :selectedPage="selectedPage"
         :pages="pages"
         :specialPages="specialPages"
         @pageSelected="handlePageSelection"
@@ -14,7 +15,10 @@
 
 
     <div class="flex-1 flex flex-col min-h-0">
-      <component :is="currentComponent" class="flex-1" />
+      <component :is="currentComponent"
+                 class="flex-1"
+                 @pageSelected="handlePageSelection"
+      />
     </div>
 
 

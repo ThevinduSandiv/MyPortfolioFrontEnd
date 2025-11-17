@@ -7,28 +7,28 @@
       <Button
         label="LinkedIn"
         icon="pi pi-linkedin"
-        class="!border-none !bg-transparent"
+        class="zoom-hover !border-none !bg-transparent"
         @click="openLink('http://www.linkedin.com/in/thevindu-hennayake-973913254')"
         />
 
       <Button
           label="GitHub"
           icon="pi pi-github"
-          class="!border-none !bg-transparent"
+          class="zoom-hover !border-none !bg-transparent"
           @click="openLink('https://github.com/ThevinduSandiv')"
       />
 
       <Button
           label="Facebook"
           icon="pi pi-facebook"
-          class="!border-none !bg-transparent"
+          class="zoom-hover !border-none !bg-transparent"
           @click="openLink('https://www.facebook.com/profile.php?id=61553614838631')"
       />
 
       <Button
           label="Instagram"
           icon="pi pi-instagram"
-          class="!border-none !bg-transparent"
+          class="zoom-hover !border-none !bg-transparent"
           @click="openLink('https://www.instagram.com/thevindusandiv')"
       />
     </div>

@@ -7,7 +7,7 @@
           :key="page.id"
           :label="page.label"
           :style="{ backgroundColor: 'var(--btn-title)'}"
-          class="!border-none !text-white"
+          class="zoom-hover !border-none !text-white"
           :class="{ 'active-page': selectedPage?.id === page.id }"
           @click="selectPage(page)"
       />
@@ -19,7 +19,7 @@
           :key="page.id"
           :label="page.label"
           :style="{ backgroundColor: 'var(--btn-title)'}"
-          class="!border-none !text-white !italic"
+          class="zoom-hover !border-none !text-white !italic"
           :class="{ 'active-page': selectedPage?.id === page.id }"
           @click="selectPage(page)"
       />
@@ -29,10 +29,17 @@
 
 <script setup>
 import Button from "primevue/button";
-import {ref} from "vue";
+import {onMounted, ref, watch} from "vue";
 
 // Define props to receive pages array from parent
 const props = defineProps({
+
+  selectedPage: {
+    type: Object,
+    required: false,
+    default: null
+  },
+
   pages: {
     type: Array,
     required: true,
@@ -46,10 +53,17 @@ const props = defineProps({
   },
 });
 
-// Define emit for selected page
-const emit = defineEmits(['pageSelected']);
 
-const selectedPage = ref(props.pages[0]);
+
+// Define emit for the selected page
+const emit = defineEmits(['pageSelected']);
+const selectedPage = ref(props.selectedPage || props.pages[0]);
+
+watch(() => props.selectedPage, (newPage) => {
+  if (newPage) {
+    selectedPage.value = newPage;
+  }
+});
 
 // Method to handle page selection
 const selectPage = (page) => {
@@ -64,4 +78,5 @@ const selectPage = (page) => {
   color: var(--btn-primary-text) !important;
   border-color: var(--btn-primary) !important;
 }
+
 </style>

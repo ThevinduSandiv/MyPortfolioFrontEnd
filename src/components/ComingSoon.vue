@@ -3,6 +3,7 @@
 
 <script setup lang="ts">
 // No TypeScript logic needed for animations
+const emit = defineEmits(['pageSelected']);
 </script>
 
 <template>
