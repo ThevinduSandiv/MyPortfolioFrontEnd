@@ -10,12 +10,12 @@
       <p class="text-xl"> Top Projects</p>
       <div class="h-[3px] bg-[var(--btn-title)] w-[90%]"></div>
 
-      <div class="h-[100px] w-full flex flex-row gap-5 items-center">
+      <div class="h-full w-full flex flex-col md:flex-row gap-5 items-center">
 
         <card
             v-if="projectsLoaded === true"
             v-for="project in projects"
-            class="zoom-hover h-full w-[20%] flex items-center justify-center bg-secondary p-2 border-2 border-brown rounded-lg"
+            class="zoom-hover h-full w-[80%] md:w-[20%] flex items-center justify-center bg-secondary p-2 border-2 border-brown rounded-lg"
             @click="openProject(project.id)"
         >
 
@@ -29,21 +29,21 @@
         <Button
             v-if="projectsLoaded === false || projects.length > 0"
             icon="pi pi-chevron-right"
-            class="zoom-hover ms-24 p-button-rounded p-button-text !bg-[var(--btn-primary)] !text-[var(--btn-title)]"
+            class="zoom-hover md:ms-24 p-button-rounded p-button-text !bg-[var(--btn-primary)] !text-[var(--btn-title)]"
             @click="viewAllProjects"
         />
 
-        <p v-else class="p-24 text-gray-400"> No Projects Found </p>
+        <p v-else class="px-24 py-5 text-gray-400"> No Projects Found </p>
 
       </div>
 
     </div>
 
-    <div class="flex flex-col h-[50%] w-full gap-3">
+    <div class="flex flex-col h-fit w-full gap-3">
       <p class="text-xl"> Recent Achievements </p>
       <div class="h-[3px] bg-[var(--btn-title)] w-[90%]"></div>
 
-      <div class="h-[100px] w-full flex flex-row gap-5 items-center">
+      <div class="h-auto w-full flex flex-col md:flex-row gap-5 items-center">
 
         <card
             v-if="achievementsLoaded === true"
@@ -61,11 +61,11 @@
         <Button
             v-if="achievementsLoaded === false || achievements.length > 0"
             icon="pi pi-chevron-right"
-            class="zoom-hover ms-24 p-button-rounded p-button-text !bg-[var(--btn-primary)] !text-[var(--btn-title)]"
+            class="zoom-hover md:ms-24 p-button-rounded p-button-text !bg-[var(--btn-primary)] !text-[var(--btn-title)]"
             @click="viewAllAchievements"
         />
 
-        <p v-else class="p-24 text-gray-400"> No Achievements Found </p>
+        <p v-else class="px-24 py-5 text-gray-400"> No Achievements Found </p>
 
       </div>
 

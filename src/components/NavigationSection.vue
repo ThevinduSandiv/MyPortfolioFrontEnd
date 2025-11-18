@@ -1,7 +1,7 @@
 <template>
-  <section class="flex flex-row justify-between bg-secondary p-2 w-full border-2 border-brown">
+  <section class="flex flex-col md:flex-row justify-between bg-secondary p-2 w-full border-2 border-brown">
 
-    <div class="flex flex-row gap-2">
+    <div class="flex flex-col md:flex-row gap-2">
       <Button
           v-for="page in pages"
           :key="page.id"
@@ -13,7 +13,7 @@
       />
     </div>
 
-    <div class="flex flex-row gap-2">
+    <div class="flex flex-col md:flex-row gap-2">
       <Button
           v-for="page in specialPages"
           :key="page.id"

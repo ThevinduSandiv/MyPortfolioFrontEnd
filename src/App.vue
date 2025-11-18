@@ -1,16 +1,25 @@
 <template>
   <div class="min-h-screen flex flex-col bg-white">
-
-    <div class="flex flex-row bg-primary justify-between p-3">
+    <div class="flex flex-row bg-primary justify-between p-3 border-2 border-brown">
+      <Button
+          v-if="isMobile === true"
+          :icon="menuShown ? 'pi pi-times' : 'pi pi-bars'"
+          class="zoom-hover p-button-rounded p-button-text !bg-[var(--btn-primary)] !text-[var(--btn-title)]"
+          @click="toggleMenu"
+      />
       <p class="text-2xl"> Thevindu Hennayake </p>
       <ThemeToggle/>
     </div>
 
     <NavigationSection
+        v-if="isMobile === false || menuShown === true"
         :selectedPage="selectedPage"
         :pages="pages"
         :specialPages="specialPages"
         @pageSelected="handlePageSelection"
+        :class="[
+            isMobile ? 'absolute top-14 left-0 right-0 h-[90vw] w-fit bg-primary z-50' : ''
+          ]"
     />
 
 
@@ -27,13 +36,26 @@
 </template>
 
 <script setup>
-import {computed, ref} from 'vue';
+import {computed, onMounted, ref} from 'vue';
 import ThemeToggle from "@/components/ThemeToggle.vue";
 import NavigationSection from "@/components/NavigationSection.vue";
 import FooterSection from "@/components/FooterSection.vue";
 
 import ComingSoon from "@/components/ComingSoon.vue";
 import Home from "@/components/HomeSection.vue";
+import Button from "primevue/button";
+
+const isMobile = ref(false);
+const checkScreenSize = () => {
+  isMobile.value = window.innerWidth < 768;
+};
+
+onMounted(() => {
+  checkScreenSize();
+  window.addEventListener('resize', checkScreenSize);
+});
+
+const menuShown = ref(false);
 
 
 const pages = [
@@ -75,7 +97,10 @@ const currentComponent = computed(() => {
   }
 });
 
-
+function toggleMenu()
+{
+  menuShown.value = !menuShown.value;
+}
 </script>
 
 <style scoped>
