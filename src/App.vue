@@ -43,6 +43,7 @@ import FooterSection from "@/components/FooterSection.vue";
 
 import ComingSoon from "@/components/ComingSoon.vue";
 import Home from "@/components/HomeSection.vue";
+import About from "@/components/AboutSection.vue";
 import Button from "primevue/button";
 
 const isMobile = ref(false);
@@ -83,7 +84,7 @@ const currentComponent = computed(() => {
     case "Home":
       return Home;
     case "About":
-      return ComingSoon;
+      return About;
     case "Projects":
       return ComingSoon;
     case "Experience":
