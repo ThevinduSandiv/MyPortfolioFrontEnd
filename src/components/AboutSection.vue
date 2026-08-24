@@ -1,225 +1,210 @@
 <template>
-  <section class="flex flex-col items-start bg-primary pl-7 py-5 w-full h-full gap-16">
-
-    <div>
-      <p class="text-4xl font-bold">Hi, I'm Thevindu</p>
-      <p class="zoom pt-2 pl-2 text-xl">{{aboutPara}}</p>
+  <section class="about-section">
+    <!-- Bio Section -->
+    <div class="bio-section">
+      <h1 class="bio-title">Hi, I'm Thevindu</h1>
+      <p class="bio-text">{{ bioText }}</p>
     </div>
 
-    <div class="flex flex-col h-[50%] w-full gap-3">
-      <p class="text-xl"> Skills </p>
-      <div class="h-[3px] bg-[var(--btn-title)] w-[90%]"></div>
+    <!-- Skills Section -->
+    <div class="skills-container">
+      <div class="category-section">
+        <h2 class="category-title">Skills</h2>
+        <div class="title-line"></div>
 
-      <div class="h-full w-full flex flex-col md:flex-row gap-5 items-center">
-
-        <card
-            v-if="skillsLoaded === true"
-            v-for="skillCat in skillCategories"
-            class="zoom-hover h-full w-[80%] md:w-[20%] flex items-center justify-center bg-secondary p-2 border-2 border-brown rounded-lg"
-            @click="openPopUp(skillCat.name, skillCat.content)"
-        >
-
-          <p>{{ skillCat.name }}</p>
-
-        </card>
-
-        <div v-else v-for="n in 3" :key="n" class="h-full w-[20%] skeleton-wave bg-gray-500 rounded overflow-hidden relative">
+        <div v-if="loadingSkills" class="loading-container">
+          <LoadingSpinner />
         </div>
-
+        <div v-else-if="skillsError" class="error-state">
+          <p>{{ skillsError }}</p>
+          <button @click="loadSkills" class="retry-btn">Try Again</button>
+        </div>
+        <div v-else class="skills-grid">
+          <div
+            v-for="(category, idx) in skillCategories"
+            :key="idx"
+            class="skill-category-card"
+            @click="openSkillPopup(category)"
+          >
+            <h3>{{ category.name }}</h3>
+            <div class="skill-preview">
+              <span v-for="(skill, i) in category.skills.slice(0, 2)" :key="i" class="skill-dot">●</span>
+              <span v-if="category.skills.length > 2" class="more-skills">+{{ category.skills.length - 2 }}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-    </div>
+      <!-- Education Section -->
+      <div class="category-section">
+        <h2 class="category-title">Education</h2>
+        <div class="title-line"></div>
 
-    <div class="flex flex-col h-[50%] w-full gap-3">
-      <p class="text-xl"> Education </p>
-      <div class="h-[3px] bg-[var(--btn-title)] w-[90%]"></div>
-
-      <div class="h-full w-full flex flex-col md:flex-row gap-5 items-center">
-
-        <card
-            v-if="skillsLoaded === true"
-            v-for="skillCat in skillCategories"
-            class="zoom-hover h-full w-[80%] md:w-[20%] flex items-center justify-center bg-secondary p-2 border-2 border-brown rounded-lg"
-            @click="openPopUp(skillCat.name, skillCat.content)"
-        >
-
-          <p>{{ skillCat.name }}</p>
-
-        </card>
-
-        <div v-else v-for="n in 3" :key="n" class="h-full w-[20%] skeleton-wave bg-gray-500 rounded overflow-hidden relative">
+        <div v-if="loadingEducation" class="loading-container">
+          <LoadingSpinner />
         </div>
-
+        <div v-else-if="educationError" class="error-state">
+          <p>{{ educationError }}</p>
+          <button @click="loadEducation" class="retry-btn">Try Again</button>
+        </div>
+        <div v-else class="education-timeline">
+          <div v-for="edu in education" :key="edu.id" class="education-item">
+            <div class="edu-dot"></div>
+            <div class="edu-content">
+              <h3>{{ edu.degree }}</h3>
+              <p class="edu-school">{{ edu.school }}</p>
+              <p class="edu-date">{{ edu.year }}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-    </div>
+      <!-- Certifications Section -->
+      <div class="category-section">
+        <h2 class="category-title">Certifications</h2>
+        <div class="title-line"></div>
 
-    <div class="flex flex-col h-[50%] w-full gap-3">
-      <p class="text-xl"> Certifications </p>
-      <div class="h-[3px] bg-[var(--btn-title)] w-[90%]"></div>
-
-      <div class="h-full w-full flex flex-col md:flex-row gap-5 items-center">
-
-        <card
-            v-if="skillsLoaded === true"
-            v-for="skillCat in skillCategories"
-            class="zoom-hover h-full w-[80%] md:w-[20%] flex items-center justify-center bg-secondary p-2 border-2 border-brown rounded-lg"
-            @click="openPopUp(skillCat.name, skillCat.content)"
-        >
-
-          <p>{{ skillCat.name }}</p>
-
-        </card>
-
-        <div v-else v-for="n in 3" :key="n" class="h-full w-[20%] skeleton-wave bg-gray-500 rounded overflow-hidden relative">
+        <div v-if="loadingCerts" class="loading-container">
+          <LoadingSpinner />
         </div>
-
+        <div v-else-if="certsError" class="error-state">
+          <p>{{ certsError }}</p>
+          <button @click="loadCerts" class="retry-btn">Try Again</button>
+        </div>
+        <div v-else class="cert-grid">
+          <div
+            v-for="cert in certifications"
+            :key="cert.id"
+            class="cert-card"
+            @click="openCertPopup(cert)"
+          >
+            <span class="cert-icon">🏆</span>
+            <h4>{{ cert.name }}</h4>
+            <p>{{ cert.issuer }}</p>
+          </div>
+        </div>
       </div>
-
     </div>
 
-    <!-- PopUp Component -->
-    <PopUpSection
-        :visible="popupVisible"
-        :content="popupContent"
-        :content-title="popupContentTitle"
-        @close="closePopUp"
-    />
+    <!-- Skill Detail Popup -->
+    <transition name="modal">
+      <SkillPopup
+        v-if="selectedSkillCategory"
+        :category="selectedSkillCategory"
+        @close="selectedSkillCategory = null"
+      />
+    </transition>
 
+    <!-- Certification Detail Popup -->
+    <transition name="modal">
+      <CertPopup
+        v-if="selectedCert"
+        :cert="selectedCert"
+        @close="selectedCert = null"
+      />
+    </transition>
   </section>
 </template>
 
 <script setup>
-import Button from "primevue/button";
-import {onMounted, ref} from "vue";
-import Skeleton from "primevue/skeleton";
-import PopUpSection from "@/components/PopUpSection.vue";
+import { ref, onMounted } from 'vue';
+import SkillPopup from './SkillPopup.vue';
+import CertPopup from './CertPopup.vue';
+import LoadingSpinner from './LoadingSpinner.vue';
+import api from '@/services/api';
 
-const emit = defineEmits(['pageSelected']);
+const bioText = ref('');
+const skillCategories = ref([]);
+const education = ref([]);
+const certifications = ref([]);
 
-const popupVisible = ref(false);
-const popupContent = ref([]);
-const popupContentTitle = ref([]);
-const aboutPara = ref("I recently graduated with a Bachelor of Computing (Software Engineering) from Curtin University. To broaden my technical perspective, I chose electives in Machine Learning and Machine Perception, complementing my core proficiency in Python, Java, network security, and mobile development. This has given me a practical introduction to AI concepts alongside a robust software engineering skill set. I am eager to apply and expand these skills in a real-world context while also planning to pursue further postgraduate studies to deepen my specialization in the field.")
-const skillsLoaded = ref(true);
-const skillCategories = ref([
-  {
-    id: 1,
-    name: "Programming Languages",
-    content: [
-      {
-        name: "Vue.js",
-        description: "Created the side navigation component in a mocked frontend for OASIS - Curtin University",
-        linkText: "Learn More",
-        link: "https://www.curtin.edu.au/"
-      },
-      {
-        name: "Vue.js",
-        description: "Created the side navigation component in a mocked frontend for OASIS - Curtin University",
-        linkText: "Learn More",
-        link: "https://www.curtin.edu.au/"
-      },
-      {
-        name: "Vue.js",
-        description: "Created the side navigation component in a mocked frontend for OASIS - Curtin University",
-        linkText: "Learn More",
-        link: "https://www.curtin.edu.au/"
-      },
-      {
-        name: "Vue.js",
-        description: "Created the side navigation component in a mocked frontend for OASIS - Curtin University",
-        linkText: "Learn More",
-        link: "https://www.curtin.edu.au/"
-      },
-      {
-        name: "Vue.js",
-        description: "Created the side navigation component in a mocked frontend for OASIS - Curtin University",
-        linkText: "Learn More",
-        link: "https://www.curtin.edu.au/"
-      },
-      {
-        name: "Vue.js",
-        description: "Created the side navigation component in a mocked frontend for OASIS - Curtin University",
-        linkText: "Learn More",
-        link: "https://www.curtin.edu.au/"
-      },
-    ]
-  },
-  {
-    id: 2,
-    name: "Frameworks / Tools",
-    description: "Contributed to developing a tourism web application using Vue and Tailwind CSS.",
-    technologies: ["Vue", ".NET", "Tailwind CSS"]
-  },
-  {
-    id: 3,
-    name: "Concepts Learned",
-    description: "A web application that displays can obtain personal information about the user and store them in firebase database.",
-    technologies: ["Vue", ".NET", "Tailwind CSS"]
-  },
-  {
-    id: 4,
-    name: "Others",
-    description: "A web application that displays can obtain personal information about the user and store them in firebase database.",
-    technologies: ["Vue", ".NET", "Tailwind CSS"]
+const loadingSkills = ref(true);
+const loadingEducation = ref(true);
+const loadingCerts = ref(true);
+
+const skillsError = ref('');
+const educationError = ref('');
+const certsError = ref('');
+
+const selectedSkillCategory = ref(null);
+const selectedCert = ref(null);
+
+const loadSkills = async () => {
+  loadingSkills.value = true;
+  skillsError.value = '';
+  try {
+    skillCategories.value = await api.getSkills();
+  } catch (error) {
+    skillsError.value = error.message;
+  } finally {
+    loadingSkills.value = false;
   }
+};
 
-]);
-const achievements = ref([]);
+const loadEducation = async () => {
+  loadingEducation.value = true;
+  educationError.value = '';
+  try {
+    education.value = await api.getBio(); // Or separate endpoint
+  } catch (error) {
+    educationError.value = error.message;
+  } finally {
+    loadingEducation.value = false;
+  }
+};
 
+const loadCerts = async () => {
+  loadingCerts.value = true;
+  certsError.value = '';
+  try {
+    certifications.value = await api.getCertifications();
+  } catch (error) {
+    certsError.value = error.message;
+  } finally {
+    loadingCerts.value = false;
+  }
+};
 
-
-function viewAllProjects() {
-  emit('pageSelected', new Object({ id: 3, label: "Projects" }));
-}
-
-function viewAllAchievements() {
-
-}
-
-function openPopUp(title, content) {
-  popupVisible.value = true;
-  popupContent.value = content;
-  popupContentTitle.value = title;
-  // Optional: Prevent body scrolling when popup is open
+const openSkillPopup = (category) => {
+  selectedSkillCategory.value = category;
   document.body.style.overflow = 'hidden';
-}
+};
 
-function closePopUp() {
-  popupVisible.value = false;
-  // Restore body scrolling
-  document.body.style.overflow = 'auto';
-}
+const openCertPopup = (cert) => {
+  selectedCert.value = cert;
+  document.body.style.overflow = 'hidden';
+};
 
-function openAchievement() {
-
-}
-
-
+onMounted(() => {
+  loadSkills();
+  loadEducation();
+  loadCerts();
+  // Fetch bio text
+  api.getBio().then(data => bioText.value = data.bio || '').catch(() => bioText.value = '');
+});
 </script>
 
 <style scoped>
-
-.skeleton-wave {
-  background: linear-gradient(
-      90deg,
-      #b0b0b0 0%,
-      #c0c0c0 20%,
-      #d0d0d0 40%,
-      #c0c0c0 60%,
-      #b0b0b0 100%
-  );
-  background-size: 200% 100%;
-  animation: wave 1.5s ease-in-out infinite;
+/* same as before plus loading/error styles */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
 }
 
-@keyframes wave {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
+.error-state {
+  text-align: center;
+  padding: 2rem;
+  color: #ef4444;
 }
 
+.retry-btn {
+  padding: 0.75rem 2rem;
+  background: linear-gradient(135deg, #f2b689 0%, #ee9152 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  margin-top: 1rem;
+  cursor: pointer;
+}
 </style>

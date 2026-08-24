@@ -1,158 +1,203 @@
 <template>
-  <section class="flex flex-col items-start bg-primary pl-7 py-5 w-full h-full gap-16">
-
-    <div>
-      <p class="text-3xl font-bold">Thevindu Hennayake - Software Engineer & Developer</p>
-      <p class="zoom pl-2 text-xl">{{skillStr}}</p>
+  <section class="home-section">
+    <!-- Hero Section -->
+    <div class="hero">
+      <div class="hero-content">
+        <h1 class="hero-title">{{ heroTitle }}</h1>
+        <p class="hero-subtitle">{{ heroTagline }}</p>
+        <div class="hero-skills">
+          <span v-for="skill in topSkills" :key="skill" class="skill-badge">
+            {{ skill }}
+          </span>
+        </div>
+      </div>
+      <div class="hero-accent"></div>
     </div>
 
-    <div class="flex flex-col h-[50%] w-full gap-3">
-      <p class="text-xl"> Top Projects</p>
-      <div class="h-[3px] bg-[var(--btn-title)] w-[90%]"></div>
-
-      <div class="h-full w-full flex flex-col md:flex-row gap-5 items-center">
-
-        <card
-            v-if="projectsLoaded === true"
-            v-for="project in projects"
-            class="zoom-hover h-full w-[80%] md:w-[20%] flex items-center justify-center bg-secondary p-2 border-2 border-brown rounded-lg"
-            @click="openProject(project.id)"
-        >
-
-          <p>{{ project.name }}</p>
-
-        </card>
-
-        <div v-else v-for="n in 3" :key="n" class="h-full w-[20%] skeleton-wave bg-gray-500 rounded overflow-hidden relative">
-        </div>
-
-        <Button
-            v-if="projectsLoaded === false || projects.length > 0"
-            icon="pi pi-chevron-right"
-            class="zoom-hover md:ms-24 p-button-rounded p-button-text !bg-[var(--btn-primary)] !text-[var(--btn-title)]"
-            @click="viewAllProjects"
-        />
-
-        <p v-else class="px-24 py-5 text-gray-400"> No Projects Found </p>
-
+    <!-- Top Projects -->
+    <section class="content-section">
+      <div class="section-header">
+        <h2 class="section-title">Featured Projects</h2>
+        <div class="title-underline"></div>
       </div>
 
-    </div>
+      <div v-if="loadingProjects" class="loading-container">
+        <LoadingSpinner />
+      </div>
+      <div v-else-if="projectsError" class="error-state">
+        <p>{{ projectsError }}</p>
+        <button @click="loadProjects" class="retry-btn">Try Again</button>
+      </div>
+      <div v-else class="projects-grid">
+        <transition-group name="fade" tag="div">
+          <div
+            v-for="project in topProjects"
+            :key="project.id"
+            class="project-card"
+            @click="selectProject(project)"
+          >
+            <div class="card-content">
+              <h3 class="project-title">{{ project.name }}</h3>
+              <div class="tech-stack">
+                <span v-for="tech in project.technologies.slice(0, 3)" :key="tech" class="tech-tag">
+                  {{ tech }}
+                </span>
+                <span v-if="project.technologies.length > 3" class="tech-tag more">
+                  +{{ project.technologies.length - 3 }}
+                </span>
+              </div>
+            </div>
+            <div class="card-hover-effect"></div>
+          </div>
+        </transition-group>
+      </div>
+    </section>
 
-    <div class="flex flex-col h-fit w-full gap-3">
-      <p class="text-xl"> Recent Achievements </p>
-      <div class="h-[3px] bg-[var(--btn-title)] w-[90%]"></div>
-
-      <div class="h-auto w-full flex flex-col md:flex-row gap-5 items-center">
-
-        <card
-            v-if="achievementsLoaded === true"
-            v-for="achievement in achievements"
-            class="zoom-hover h-full w-[20%] flex items-center justify-center bg-secondary p-2 border-2 border-brown rounded-lg"
-            @click="openAchievement()"
-        >
-
-
-        </card>
-
-        <div v-else v-for="n in 3" :key="n" class="h-full w-[20%] skeleton-wave bg-gray-500 rounded overflow-hidden relative">
-        </div>
-
-        <Button
-            v-if="achievementsLoaded === false || achievements.length > 0"
-            icon="pi pi-chevron-right"
-            class="zoom-hover md:ms-24 p-button-rounded p-button-text !bg-[var(--btn-primary)] !text-[var(--btn-title)]"
-            @click="viewAllAchievements"
-        />
-
-        <p v-else class="px-24 py-5 text-gray-400"> No Achievements Found </p>
-
+    <!-- Recent Achievements -->
+    <section class="content-section">
+      <div class="section-header">
+        <h2 class="section-title">Recent Achievements</h2>
+        <div class="title-underline"></div>
       </div>
 
-    </div>
+      <div v-if="loadingAchievements" class="loading-container">
+        <LoadingSpinner />
+      </div>
+      <div v-else-if="achievementsError" class="error-state">
+        <p>{{ achievementsError }}</p>
+        <button @click="loadAchievements" class="retry-btn">Try Again</button>
+      </div>
+      <div v-else class="achievements-grid">
+        <transition-group name="fade" tag="div">
+          <div
+            v-for="achievement in recentAchievements"
+            :key="achievement.id"
+            class="achievement-card"
+            @click="selectAchievement(achievement)"
+          >
+            <div class="achievement-content">
+              <p class="achievement-title">{{ achievement.title }}</p>
+              <p class="achievement-date">{{ formatDate(achievement.date) }}</p>
+            </div>
+          </div>
+        </transition-group>
+      </div>
+    </section>
 
+    <!-- Project Detail Popup -->
+    <transition name="modal">
+      <ProjectPopup
+        v-if="selectedProjectData"
+        :project="selectedProjectData"
+        @close="selectedProjectData = null"
+      />
+    </transition>
+
+    <!-- Achievement Detail Popup -->
+    <transition name="modal">
+      <AchievementPopup
+        v-if="selectedAchievementData"
+        :achievement="selectedAchievementData"
+        @close="selectedAchievementData = null"
+      />
+    </transition>
   </section>
 </template>
 
 <script setup>
-import Button from "primevue/button";
-import {onMounted, ref} from "vue";
-import Skeleton from "primevue/skeleton";
+import { ref, computed, onMounted } from 'vue';
+import ProjectPopup from './ProjectPopup.vue';
+import AchievementPopup from './AchievementPopup.vue';
+import LoadingSpinner from './LoadingSpinner.vue';
+import api from '@/services/api';
+
+const heroTitle = ref('Thevindu Hennayake');
+const heroTagline = ref('Software Engineer & Developer');
+const topSkills = ref(['Java', 'C', 'Python']);
+
+const topProjects = ref([]);
+const achievements = ref([]);
+const loadingProjects = ref(true);
+const loadingAchievements = ref(true);
+const projectsError = ref('');
+const achievementsError = ref('');
+const selectedProjectData = ref(null);
+const selectedAchievementData = ref(null);
+
+const recentAchievements = computed(() => achievements.value.slice(0, 3));
+
+const loadProjects = async () => {
+  loadingProjects.value = true;
+  projectsError.value = '';
+  try {
+    const projects = await api.getProjects();
+    // Take first 3 as featured
+    topProjects.value = projects.slice(0, 3);
+  } catch (error) {
+    projectsError.value = error.message;
+  } finally {
+    loadingProjects.value = false;
+  }
+};
+
+const loadAchievements = async () => {
+  loadingAchievements.value = true;
+  achievementsError.value = '';
+  try {
+    const data = await api.getAchievements();
+    achievements.value = data;
+  } catch (error) {
+    achievementsError.value = error.message;
+  } finally {
+    loadingAchievements.value = false;
+  }
+};
+
+const selectProject = (project) => {
+  selectedProjectData.value = project;
+  document.body.style.overflow = 'hidden';
+};
+
+const selectAchievement = (achievement) => {
+  selectedAchievementData.value = achievement;
+  document.body.style.overflow = 'hidden';
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short'
+  });
+};
 
 onMounted(() => {
-  skillStr.value = topSkills.value.join(" | ");
-})
-const emit = defineEmits(['pageSelected']);
-
-const projectsLoaded = ref(true);
-const achievementsLoaded = ref(true);
-const topSkills = ref(["Java", "C", "Python"]);
-const skillStr = ref("");
-const projects = ref([
-  {
-    id: 1,
-    name: "OASIS Side-Navigation",
-    description: "Created the side navigation component in a mocked frontend for OASIS - Curtin University",
-    technologies: ["Vue.js", "PrimeVue", "PrimeBlocks", "Tailwind CSS"]
-  },
-  {
-    id: 2,
-    name: "Tourism Web Application",
-    description: "Contributed to developing a tourism web application using Vue and Tailwind CSS.",
-    technologies: ["Vue", ".NET", "Tailwind CSS"]
-  },
-  {
-    id: 3,
-    name: "Bit About Me Project",
-    description: "A web application that displays can obtain personal information about the user and store them in firebase database.",
-    technologies: ["Vue", ".NET", "Tailwind CSS"]
-  }
-]);
-const achievements = ref([]);
-
-
-
-function viewAllProjects() {
-  emit('pageSelected', new Object({ id: 3, label: "Projects" }));
-}
-
-function viewAllAchievements() {
-
-}
-
-function openProject(projectId) {
-
-}
-
-function openAchievement() {
-
-}
-
-
+  loadProjects();
+  loadAchievements();
+});
 </script>
 
 <style scoped>
-
-.skeleton-wave {
-  background: linear-gradient(
-      90deg,
-      #b0b0b0 0%,
-      #c0c0c0 20%,
-      #d0d0d0 40%,
-      #c0c0c0 60%,
-      #b0b0b0 100%
-  );
-  background-size: 200% 100%;
-  animation: wave 1.5s ease-in-out infinite;
+/* same styles as before plus loading/error classes */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
 }
 
-@keyframes wave {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
+.error-state {
+  text-align: center;
+  padding: 2rem;
+  color: #ef4444;
 }
 
+.retry-btn {
+  padding: 0.75rem 2rem;
+  background: linear-gradient(135deg, #f2b689 0%, #ee9152 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  margin-top: 1rem;
+  cursor: pointer;
+}
 </style>

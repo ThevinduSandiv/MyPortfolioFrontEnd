@@ -1,228 +1,122 @@
-/* color palette from <https://github.com/vuejs/theme> */
 :root {
-  --vt-c-white: #ffffff;
-  --vt-c-white-soft: #f8f8f8;
-  --vt-c-white-mute: #f2f2f2;
+  /* Light theme colors */
+  --bg-primary: #fcf6ef;
+  --bg-secondary: #f9e9d9;
+  --text-primary: #2c2c2c;
+  --text-secondary: #8b7355;
+  --border-color: #d4ccc4;
+  --accent-primary: #f2b689;
+  --accent-secondary: #ee9152;
+  --text-dark: #382e28;
 
-  --vt-c-black: #181818;
-  --vt-c-black-soft: #222222;
-  --vt-c-black-mute: #282828;
+  /* Typography */
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Italiana', 'Times New Roman', serif;
 
-  --vt-c-indigo: #2c3e50;
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
 
-  --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
-  --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
-  --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
-  --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 12px;
 
-  --vt-c-text-light-1: var(--vt-c-indigo);
-  --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
-  --vt-c-text-dark-1: var(--vt-c-white);
-  --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
-
-  /* Cream color palette - available everywhere */
-  --bg-color-primary: #FCF6EF;
-  --bg-color-secondary: #F9E9D9;
-  --text-color: #483F37;
-  --heading-color: #382E28;
-  --link-color: var(--vt-c-indigo);
-  --border-color: #382E28;
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.3s ease;
+  --transition-slow: 0.5s ease;
 }
 
-/* semantic color variables for this project */
-:root {
-  --color-background: var(--bg-color-primary); /* Use cream as default */
-  --color-background-soft: var(--bg-color-secondary); /* Use secondary cream */
-  --color-background-mute: #f2e6d9; /* A slightly darker cream */
-
-  --color-border: var(--vt-c-divider-light-2);
-  --color-border-hover: var(--vt-c-divider-light-1);
-
-  --color-heading: var(--heading-color); /* Use brown heading */
-  --color-text: var(--text-color); /* Use brown text */
-
-  --section-gap: 160px;
-
-  /* Button Colors - Light Theme */
-  --btn-primary: var(--vt-c-indigo);
-  --btn-primary-hover: #1a365d;
-  --btn-primary-text: var(--vt-c-white);
-
-  --btn-secondary: var(--vt-c-divider-light-2);
-  --btn-secondary-hover: var(--vt-c-divider-light-1);
-  --btn-secondary-text: var(--text-color); /* Use brown text */
-
-  --btn-success: #10b981;
-  --btn-success-hover: #059669;
-  --btn-success-text: var(--vt-c-white);
-
-  --btn-warning: #f59e0b;
-  --btn-warning-hover: #d97706;
-  --btn-warning-text: var(--vt-c-white);
-
-  --btn-danger: #ef4444;
-  --btn-danger-hover: #dc2626;
-  --btn-danger-text: var(--vt-c-white);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: var(--vt-c-black);
-    --color-background-soft: var(--vt-c-black-soft);
-    --color-background-mute: var(--vt-c-black-mute);
-
-    --color-border: var(--vt-c-divider-dark-2);
-    --color-border-hover: var(--vt-c-divider-dark-1);
-
-    --color-heading: var(--vt-c-text-dark-1);
-    --color-text: var(--vt-c-text-dark-2);
-
-    /* Button Colors - Dark Theme */
-    --btn-primary: #60a5fa;
-    --btn-primary-hover: #3b82f6;
-    --btn-primary-text: var(--vt-c-black);
-
-    --btn-secondary: var(--vt-c-divider-dark-2);
-    --btn-secondary-hover: var(--vt-c-divider-dark-1);
-    --btn-secondary-text: var(--vt-c-text-dark-1);
-
-    --btn-success: #34d399;
-    --btn-success-hover: #10b981;
-    --btn-success-text: var(--vt-c-black);
-
-    --btn-warning: #fbbf24;
-    --btn-warning-hover: #f59e0b;
-    --btn-warning-text: var(--vt-c-black);
-
-    --btn-danger: #f87171;
-    --btn-danger-hover: #ef4444;
-    --btn-danger-text: var(--vt-c-black);
-  }
-}
-
-/* Manual theme override - DARK THEME */
 [data-theme="dark"] {
-  --color-background: var(--vt-c-black);
-  --color-background-soft: var(--vt-c-black-soft);
-  --color-background-mute: var(--vt-c-black-mute);
-
-  --color-border: var(--vt-c-divider-dark-2);
-  --color-border-hover: var(--vt-c-divider-dark-1);
-
-  --color-heading: var(--vt-c-text-dark-1);
-  --color-text: var(--vt-c-text-dark-2);
-
-  /* Button Colors - Dark Theme */
-  --btn-title: #382E28FF;
-  --btn-primary: #F2B689FF;
-  --btn-active: #EE9152FF;
-  --btn-primary-hover: #3b82f6;
-  --btn-primary-text: var(--vt-c-black);
-
-  --btn-secondary: var(--vt-c-divider-dark-2);
-  --btn-secondary-hover: var(--vt-c-divider-dark-1);
-  --btn-secondary-text: var(--vt-c-text-dark-1);
-
-  --btn-success: #34d399;
-  --btn-success-hover: #10b981;
-  --btn-success-text: var(--vt-c-black);
-
-  --btn-warning: #fbbf24;
-  --btn-warning-hover: #f59e0b;
-  --btn-warning-text: var(--vt-c-black);
-
-  --btn-danger: #f87171;
-  --btn-danger-hover: #ef4444;
-  --btn-danger-text: var(--vt-c-black);
+  --bg-primary: #0f0f0f;
+  --bg-secondary: #1a1a1a;
+  --text-primary: #e0e0e0;
+  --text-secondary: #a08070;
+  --border-color: #333;
+  --text-dark: #f0e0d8;
 }
 
-/* Manual theme override - LIGHT THEME (Cream colors) */
-[data-theme="light"] {
-  --color-background: var(--bg-color-primary); /* Cream background */
-  --color-background-soft: var(--bg-color-secondary); /* Secondary cream */
-  --color-background-mute: #f2e6d9; /* Darker cream */
-
-  --color-border: var(--border-color); /* Brown border */
-  --color-border-hover: #2a211a; /* Darker brown */
-
-  --color-heading: var(--heading-color); /* Brown heading */
-  --color-text: var(--text-color); /* Brown text */
-
-  /* Button Colors - Light Theme (adjusted for cream background) */
-  --btn-title: #382E28FF;
-  --btn-primary: #F2B689FF;
-  --btn-active: #EE9152FF;
-  --btn-primary-hover: #3b82f6;
-  --btn-primary-text: var(--vt-c-black);
-  --btn-secondary: rgba(56, 46, 40, 0.1); /* Light brown transparent */
-  --btn-secondary-hover: rgba(56, 46, 40, 0.2);
-  --btn-secondary-text: var(--heading-color);
-
-  --btn-success: #10b981;
-  --btn-success-hover: #059669;
-  --btn-success-text: var(--vt-c-white);
-
-  --btn-warning: #f59e0b;
-  --btn-warning-hover: #d97706;
-  --btn-warning-text: var(--vt-c-white);
-
-  --btn-danger: #ef4444;
-  --btn-danger-hover: #dc2626;
-  --btn-danger-text: var(--vt-c-white);
-}
-
-/* Utility classes for direct cream color usage */
-.bg-primary {
-  background-color: var(--bg-color-primary) !important;
-}
-
-.bg-secondary {
-  background-color: var(--bg-color-secondary) !important;
-}
-
-.text-brown {
-  color: var(--text-color) !important;
-}
-
-.heading-brown {
-  color: var(--heading-color) !important;
-}
-
-.border-brown {
-  border-color: var(--border-color) !important;
-}
-
-*,
-*::before,
-*::after {
+* {
   box-sizing: border-box;
   margin: 0;
-  font-weight: normal;
+  padding: 0;
 }
 
+html,
 body {
-  min-height: 100vh;
-  color: var(--color-text);
-  background: var(--color-background);
-  transition:
-          color 0.5s,
-          background-color 0.5s;
+  height: 100%;
+  font-family: var(--font-primary);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color var(--transition-base), color var(--transition-base);
   line-height: 1.6;
-  font-family:
-          Inter,
-          -apple-system,
-          BlinkMacSystemFont,
-          'Segoe UI',
-          Roboto,
-          Oxygen,
-          Ubuntu,
-          Cantarell,
-          'Fira Sans',
-          'Droid Sans',
-          'Helvetica Neue',
-          sans-serif;
-  font-size: 15px;
-  text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+a {
+  color: var(--accent-secondary);
+  text-decoration: none;
+  transition: color var(--transition-base);
+}
+
+a:hover {
+  color: var(--accent-primary);
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input, textarea, select {
+  font-family: inherit;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-secondary);
+}
+
+/* Selection */
+::selection {
+  background: var(--accent-secondary);
+  color: white;
+}
+
+::-moz-selection {
+  background: var(--accent-secondary);
+  color: white;
 }
