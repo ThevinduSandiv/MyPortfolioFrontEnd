@@ -11,9 +11,6 @@
       <div class="popup-body">
         <p class="achievement-description">{{ achievement.achievement_description }}</p>
         
-        <div class="points-badge">
-          <span class="points-value">{{ achievement.achievement_points }} pts</span>
-        </div>
       </div>
     </div>
   </div>
@@ -155,18 +152,4 @@ const formatDate = (dateString) => {
   color: #aaa;
 }
 
-.points-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem 1.5rem;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  border-radius: 8px;
-  color: white;
-}
-
-.points-value {
-  font-size: 1.3rem;
-  font-weight: 700;
-}
 </style>

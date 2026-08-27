@@ -67,15 +67,15 @@
       <div class="info-grid">
         <div class="info-item">
           <h3>Email</h3>
-          <p><a href="mailto:contact@example.com">contact@example.com</a></p>
+          <p><a href="mailto:me@thevinduhennayake.com">me@thevinduhennayake.com</a></p>
         </div>
         <div class="info-item">
           <h3>LinkedIn</h3>
-          <p><a href="https://linkedin.com" target="_blank" rel="noopener">LinkedIn Profile</a></p>
+          <p><a href="https://www.linkedin.com/in/thevindu-hennayake-973913254" target="_blank" rel="noopener">LinkedIn Profile</a></p>
         </div>
         <div class="info-item">
           <h3>GitHub</h3>
-          <p><a href="https://github.com" target="_blank" rel="noopener">GitHub Profile</a></p>
+          <p><a href="https://github.com/ThevinduSandiv" target="_blank" rel="noopener">GitHub Profile</a></p>
         </div>
       </div>
     </div>
@@ -83,37 +83,39 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref, nextTick } from 'vue';
 import { api } from '@/services/api';
 
 const props = defineProps({
   toastRef: Object
 });
 
-const form = reactive({
+const createEmptyForm = () => ({
   msg_title: '',
   sender_name: '',
   sender_email: '',
   msg_content: ''
 });
 
+const form = ref(createEmptyForm());
+
 const isSubmitting = ref(false);
 
 const handleSubmit = async () => {
-  if (!form.msg_title || !form.msg_content) {
+  if (isSubmitting.value) return;
+
+  if (!form.value.msg_title || !form.value.msg_content) {
     props.toastRef?.addToast('Please fill in required fields', 'error', 'Validation Error');
     return;
   }
 
   try {
     isSubmitting.value = true;
-    await api.sendContact(form);
-    
-    // Reset form
-    form.msg_title = '';
-    form.sender_name = '';
-    form.sender_email = '';
-    form.msg_content = '';
+    await api.sendContact({ ...form.value });
+
+    form.value = createEmptyForm();
+    isSubmitting.value = false;
+    await nextTick();
     
     props.toastRef?.addToast('Message sent successfully! I\'ll get back to you soon.', 'success', 'Success');
   } catch (error) {

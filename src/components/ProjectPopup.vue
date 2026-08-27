@@ -25,10 +25,6 @@
           </a>
         </div>
 
-        <div class="points-badge">
-          <span class="points-label">Rating:</span>
-          <span class="points-value">{{ project.project_points }}/100</span>
-        </div>
       </div>
     </div>
   </div>
@@ -210,22 +206,4 @@ defineEmits(['close']);
   transform: translateY(-2px);
 }
 
-.points-badge {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: linear-gradient(135deg, #f2b689 0%, #ee9152 100%);
-  border-radius: 8px;
-  color: white;
-}
-
-.points-label {
-  font-weight: 600;
-}
-
-.points-value {
-  font-size: 1.2rem;
-  font-weight: 700;
-}
 </style>

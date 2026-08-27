@@ -148,6 +148,7 @@ onMounted(() => {
   margin-left: -1.5rem;
   margin-right: -1.5rem;
   padding-left: 3.5rem;
+  overflow: visible;
 }
 
 [data-theme='dark'] .experience-item.current {
@@ -157,13 +158,16 @@ onMounted(() => {
 
 .timeline-marker {
   position: absolute;
-  left: -10px;
+  /* Align the marker center with the timeline line inside the padded wrapper. */
+  left: -41px;
   top: 6px;
   width: 18px;
   height: 18px;
   background: #f2b689;
   border: 3px solid white;
   border-radius: 50%;
+  z-index: 2;
+  box-shadow: 0 0 0 4px var(--surface-glass, #fcf6ef);
   transition: all 0.3s ease;
 }
 
@@ -192,9 +196,9 @@ onMounted(() => {
 
 .current-badge {
   position: absolute;
-  top: -8px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: -4px;
+  left: 25px;
+  transform: none;
   background: #10b981;
   color: white;
   padding: 0.25rem 0.75rem;
@@ -203,6 +207,8 @@ onMounted(() => {
   font-weight: 600;
   white-space: nowrap;
   opacity: 0;
+  z-index: 3;
+  box-shadow: 0 5px 14px rgba(16, 185, 129, 0.2);
 }
 
 .experience-item.current .current-badge {
@@ -299,11 +305,20 @@ onMounted(() => {
 
 /* Responsive */
 @media (max-width: 768px) {
+  .timeline-marker {
+    left: -41px;
+  }
+
   .experience-item.current {
     margin-left: -1rem;
     margin-right: -1rem;
     padding: 1rem;
     padding-left: 2rem;
+  }
+
+  .current-badge {
+    top: -0.6rem;
+    left: 2rem;
   }
 
   .exp-title {

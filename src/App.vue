@@ -12,12 +12,37 @@
     <header class="app-header">
       <div class="header-content">
         <h1 class="logo-text">Thevindu Hennayake</h1>
-        <ThemeToggle @theme-changed="currentTheme = $event" />
+        <div class="header-actions">
+          <ThemeToggle @theme-changed="currentTheme = $event" />
+          <button
+            v-if="isMobile"
+            class="mobile-menu-toggle"
+            type="button"
+            aria-label="Open navigation menu"
+            aria-controls="primary-navigation"
+            :aria-expanded="mobileMenuOpen"
+            @click="mobileMenuOpen = true"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        </div>
       </div>
     </header>
 
+    <button
+      v-if="isMobile"
+      class="nav-backdrop"
+      :class="{ visible: mobileMenuOpen }"
+      type="button"
+      aria-label="Close navigation menu"
+      tabindex="-1"
+      @click="mobileMenuOpen = false"
+    ></button>
+
     <!-- Navigation -->
-    <nav class="app-nav" :class="{ 'mobile-open': mobileMenuOpen }">
+    <nav id="primary-navigation" class="app-nav" :class="{ 'mobile-open': mobileMenuOpen }">
       <div class="nav-content">
         <div class="nav-main">
           <button
@@ -40,15 +65,14 @@
           </button>
         </div>
       </div>
-      <button v-if="isMobile" class="nav-close" @click="mobileMenuOpen = false">✕</button>
+      <button
+        v-if="isMobile"
+        class="nav-close"
+        type="button"
+        aria-label="Close navigation menu"
+        @click="mobileMenuOpen = false"
+      >✕</button>
     </nav>
-
-    <!-- Mobile Menu Toggle -->
-    <button v-if="isMobile" class="mobile-menu-toggle" @click="mobileMenuOpen = !mobileMenuOpen">
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
 
     <!-- Main Content -->
     <main class="app-main">
@@ -64,7 +88,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import ThemeToggle from '@/components/ThemeToggle.vue';
 import FooterSection from '@/components/FooterSection.vue';
 import InteractiveBackground from '@/components/InteractiveBackground.vue';
@@ -114,7 +138,16 @@ const selectPage = (page) => {
 
 const checkScreenSize = () => {
   isMobile.value = window.innerWidth < 768;
+  if (!isMobile.value) mobileMenuOpen.value = false;
 };
+
+const handleEscape = (event) => {
+  if (event.key === 'Escape') mobileMenuOpen.value = false;
+};
+
+watch(mobileMenuOpen, (isOpen) => {
+  document.body.style.overflow = isOpen && isMobile.value ? 'hidden' : '';
+});
 
 const downloadCV = () => {
   const cvData = {
@@ -148,6 +181,7 @@ const downloadCV = () => {
 onMounted(() => {
   checkScreenSize();
   window.addEventListener('resize', checkScreenSize);
+  window.addEventListener('keydown', handleEscape);
   
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const savedTheme = localStorage.getItem('theme');
@@ -160,6 +194,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkScreenSize);
+  window.removeEventListener('keydown', handleEscape);
+  document.body.style.overflow = '';
 });
 </script>
 
@@ -171,6 +207,21 @@ onUnmounted(() => {
   background: var(--bg-light);
   color: var(--text-light);
   transition: background-color 0.5s ease, color 0.5s ease;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.app-container::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.34;
+  background-image: linear-gradient(rgba(56, 46, 40, 0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(56, 46, 40, 0.035) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, black, transparent 78%);
 }
 
 .app-container[data-theme='dark'] {
@@ -247,6 +298,9 @@ onUnmounted(() => {
   border-bottom: 2px solid #d4ccc4;
   padding: 1.5rem 2rem;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  position: relative;
+  z-index: 20;
+  backdrop-filter: blur(18px);
 }
 
 [data-theme='dark'] .app-header {
@@ -261,6 +315,12 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
 }
 
 .logo-text {
@@ -285,6 +345,10 @@ onUnmounted(() => {
   gap: 2rem;
   overflow-x: auto;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  position: sticky;
+  top: 0;
+  z-index: 15;
+  backdrop-filter: blur(18px);
 }
 
 [data-theme='dark'] .app-nav {
@@ -308,6 +372,10 @@ onUnmounted(() => {
   align-items: center;
 }
 
+.nav-special {
+  margin-left: auto;
+}
+
 .nav-btn {
   background: transparent;
   border: 2px solid #382e28;
@@ -320,7 +388,20 @@ onUnmounted(() => {
   transition: all 0.3s ease;
   white-space: nowrap;
   font-family: inherit;
+  position: relative;
+  overflow: hidden;
 }
+
+.nav-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.24), transparent);
+  transform: translateX(-120%);
+  transition: transform 0.5s ease;
+}
+
+.nav-btn:hover::before { transform: translateX(120%); }
 
 [data-theme='dark'] .nav-btn {
   border-color: #f0e0d8;
@@ -349,32 +430,35 @@ onUnmounted(() => {
   display: none;
 }
 
+.nav-backdrop {
+  display: none;
+}
+
 /* Mobile Menu */
 .mobile-menu-toggle {
   display: none;
-  position: fixed;
-  top: 1.5rem;
-  right: 2rem;
-  z-index: 50;
   background: #f2b689;
-  border: none;
-  width: 40px;
-  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.48);
+  width: 42px;
+  height: 42px;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 13px;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(238, 145, 82, 0.24);
 }
 
 .mobile-menu-toggle:hover {
   background: #ee9152;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(238, 145, 82, 0.34);
 }
 
 .mobile-menu-toggle span {
-  width: 24px;
+  width: 21px;
   height: 2px;
   background: white;
   border-radius: 1px;
@@ -390,48 +474,114 @@ onUnmounted(() => {
   padding: 2rem;
   display: flex;
   flex-direction: column;
+  position: relative;
+  z-index: 1;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .app-header {
-    padding: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid rgba(139, 115, 85, 0.18);
+    background: rgba(252, 246, 239, 0.82);
+    backdrop-filter: blur(22px) saturate(1.15);
+    -webkit-backdrop-filter: blur(22px) saturate(1.15);
+    box-shadow: 0 10px 30px rgba(78, 51, 33, 0.08);
+  }
+
+  [data-theme='dark'] .app-header {
+    background: rgba(15, 15, 15, 0.82);
+    border-bottom-color: rgba(242, 182, 137, 0.14);
   }
 
   .header-content {
-    flex-direction: column;
-    gap: 1rem;
+    flex-direction: row;
+    gap: 0.75rem;
+    min-height: 44px;
   }
 
   .logo-text {
-    font-size: 1.3rem;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: clamp(1.05rem, 5vw, 1.3rem);
+    letter-spacing: -0.025em;
+  }
+
+  .header-actions {
+    flex-shrink: 0;
+    gap: 0.65rem;
+  }
+
+  .nav-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 39;
+    border: 0;
+    background: rgba(20, 14, 11, 0.48);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+
+  .nav-backdrop.visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
   }
 
   .app-nav {
-    display: none;
+    display: flex;
     position: fixed;
     top: 0;
-    left: 0;
+    left: auto;
     right: 0;
     bottom: 0;
+    width: min(88vw, 380px);
     flex-direction: column;
-    padding: 6rem 1rem 2rem;
+    justify-content: flex-start;
+    padding: 5.75rem 1.25rem 2rem;
     gap: 1rem;
     z-index: 40;
-    background: #fcf6ef;
+    overflow-y: auto;
+    background: rgba(252, 246, 239, 0.96);
+    border: 0;
+    border-left: 1px solid rgba(238, 145, 82, 0.22);
+    border-radius: 28px 0 0 28px;
+    box-shadow: -24px 0 70px rgba(50, 30, 20, 0.2);
+    backdrop-filter: blur(26px) saturate(1.15);
+    -webkit-backdrop-filter: blur(26px) saturate(1.15);
+    transform: translateX(105%);
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease, visibility 0.38s ease;
   }
 
   [data-theme='dark'] .app-nav {
-    background: #0f0f0f;
+    background: rgba(20, 18, 17, 0.97);
+    border-left-color: rgba(242, 182, 137, 0.18);
+    box-shadow: -24px 0 70px rgba(0, 0, 0, 0.5);
   }
 
   .app-nav.mobile-open {
+    transform: translateX(0);
+    opacity: 1;
+    visibility: visible;
     display: flex;
   }
 
   .nav-content {
     flex-direction: column;
-    gap: 1rem;
+    align-items: stretch;
+    gap: 1.4rem;
     width: 100%;
   }
 
@@ -439,24 +589,51 @@ onUnmounted(() => {
   .nav-special {
     flex-direction: column;
     width: 100%;
-    gap: 0.5rem;
+    gap: 0.7rem;
+  }
+
+  .nav-special {
+    margin-left: 0;
+    padding-top: 1.15rem;
+    border-top: 1px solid rgba(139, 115, 85, 0.2);
   }
 
   .nav-btn {
     width: 100%;
-    justify-content: center;
+    min-height: 52px;
+    padding: 0.85rem 1rem;
+    border-width: 1px;
+    border-radius: 14px;
+    text-align: left;
+    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.38);
+  }
+
+  [data-theme='dark'] .nav-btn {
+    background: rgba(255, 255, 255, 0.025);
   }
 
   .nav-close {
-    display: block;
+    display: flex;
     position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background: transparent;
-    border: none;
-    font-size: 1.5rem;
+    top: 1.15rem;
+    right: 1.2rem;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    background: rgba(238, 145, 82, 0.13);
+    border: 1px solid rgba(238, 145, 82, 0.3);
+    border-radius: 14px;
+    font-size: 1.25rem;
     cursor: pointer;
     color: #382e28;
+    transition: transform 0.25s ease, background 0.25s ease;
+  }
+
+  .nav-close:hover {
+    transform: rotate(8deg) scale(1.05);
+    background: rgba(238, 145, 82, 0.24);
   }
 
   [data-theme='dark'] .nav-close {
@@ -482,11 +659,16 @@ onUnmounted(() => {
 
 @media (max-width: 480px) {
   .app-header {
-    padding: 0.75rem;
+    padding: 0.65rem 0.75rem;
   }
 
   .logo-text {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
+  }
+
+  .app-nav {
+    width: min(92vw, 360px);
+    padding-inline: 1rem;
   }
 
   .floating-cv-button {

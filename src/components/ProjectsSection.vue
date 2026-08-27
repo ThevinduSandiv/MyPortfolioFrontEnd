@@ -8,8 +8,9 @@
         type="text"
         placeholder="Search projects..."
         class="search-input"
-        @input="handleSearch"
+        @keyup.enter="applySearch"
       />
+      <button type="button" class="search-btn" @click="applySearch">Search</button>
       <select v-model="selectedTech" class="filter-select" @change="handleFilter">
         <option value="">All Technologies</option>
         <option v-for="tech in allTechs" :key="tech" :value="tech">
@@ -114,6 +115,7 @@ const projectsLoading = ref(true);
 const projectsError = ref(null);
 
 const searchQuery = ref('');
+const appliedSearchQuery = ref('');
 const selectedTech = ref('');
 const sortOrder = ref('newest');
 const currentPage = ref(1);
@@ -135,12 +137,12 @@ const allTechs = computed(() => {
 const displayedProjects = computed(() => {
   let filtered = projects.value;
 
-  if (searchQuery.value.trim()) {
-    const q = searchQuery.value.toLowerCase().trim();
+  if (appliedSearchQuery.value) {
+    const q = appliedSearchQuery.value.toLowerCase();
     filtered = filtered.filter(
       (p) =>
-        p.project_title.toLowerCase().includes(q) ||
-        p.project_description.toLowerCase().includes(q)
+        (p.project_title || '').toLowerCase().includes(q) ||
+        (p.project_description || '').toLowerCase().includes(q)
     );
   }
 
@@ -191,11 +193,19 @@ const selectProject = (project) => {
   selectedProjectData.value = project;
 };
 
-watch([searchQuery, selectedTech, sortOrder], resetPagination);
+watch([appliedSearchQuery, selectedTech, sortOrder], resetPagination);
 
-const handleSearch = () => {};
-const handleFilter = () => {};
-const handleSort = () => {};
+const applySearch = () => {
+  appliedSearchQuery.value = searchQuery.value.trim();
+};
+
+const handleFilter = () => {
+  resetPagination();
+};
+
+const handleSort = () => {
+  resetPagination();
+};
 
 const fetchProjects = async () => {
   try {
@@ -278,6 +288,21 @@ onMounted(fetchProjects);
 .search-input {
   flex: 1;
   min-width: 200px;
+}
+.search-btn {
+  padding: 0.75rem 1.25rem;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f6b27d 0%, #ee9152 100%);
+  color: #fffaf6;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(238, 145, 82, 0.2);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+}
+.search-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(238, 145, 82, 0.32);
+  filter: brightness(1.04);
 }
 .projects-grid {
   display: grid;
@@ -362,15 +387,18 @@ onMounted(fetchProjects);
 .tech-tag {
   display: inline-block;
   padding: 0.3rem 0.7rem;
-  background: rgba(238, 145, 82, 0.15);
-  border-radius: 4px;
+  background: linear-gradient(135deg, #f6b27d 0%, #ee9152 100%);
+  border: 1px solid rgba(255, 220, 195, 0.65);
+  border-radius: 999px;
   font-size: 0.75rem;
-  font-weight: 500;
-  color: #ee9152;
+  font-weight: 700;
+  color: #fffaf6;
+  text-shadow: 0 1px 2px rgba(86, 45, 24, 0.3);
 }
 [data-theme='dark'] .tech-tag {
-  background: rgba(242, 182, 137, 0.2);
-  color: #f2b689;
+  background: linear-gradient(135deg, #f8bd91 0%, #ee9152 100%);
+  color: #261812;
+  text-shadow: none;
 }
 .tech-tag.more {
   background: #ee9152;

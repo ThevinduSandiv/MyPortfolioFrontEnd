@@ -14,14 +14,8 @@
               <h4 class="skill-name">{{ skill.skill_title }}</h4>
               <p class="skill-description">{{ skill.skill_description }}</p>
             </div>
-            <div class="skill-metrics">
-              <div class="proficiency">
-                <div class="proficiency-bar">
-                  <div class="proficiency-fill" :style="{ width: skill.skill_points + '%' }"></div>
-                </div>
-                <span class="proficiency-text">{{ skill.skill_points }}%</span>
-              </div>
-              <span v-if="skill.yearsOfExperience" class="years">
+            <div v-if="skill.yearsOfExperience" class="skill-metrics">
+              <span class="years">
                 {{ skill.yearsOfExperience }} yrs
               </span>
             </div>
@@ -186,40 +180,6 @@ defineEmits(['close']);
   display: flex;
   align-items: center;
   gap: 1.5rem;
-}
-
-.proficiency {
-  flex: 1;
-}
-
-.proficiency-bar {
-  width: 100%;
-  height: 6px;
-  background: #e8ddd5;
-  border-radius: 3px;
-  overflow: hidden;
-  margin-bottom: 0.3rem;
-}
-
-[data-theme='dark'] .proficiency-bar {
-  background: #333;
-}
-
-.proficiency-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #ee9152 0%, #f2b689 100%);
-  border-radius: 3px;
-  transition: width 0.3s ease;
-}
-
-.proficiency-text {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #ee9152;
-}
-
-[data-theme='dark'] .proficiency-text {
-  color: #f2b689;
 }
 
 .years {

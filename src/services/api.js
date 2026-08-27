@@ -109,7 +109,17 @@ export const api = {
         body: JSON.stringify(data)
       });
       if (!response.ok) throw { response };
-      return await response.json();
+
+      // A successful contact submission does not require a response payload.
+      // Read the body safely so an empty 2xx response still resolves normally.
+      const responseText = await response.text();
+      if (!responseText.trim()) return { success: true };
+
+      try {
+        return JSON.parse(responseText);
+      } catch (_) {
+        return { success: true };
+      }
     } catch (error) {
       throw { message: handleError(error) };
     }

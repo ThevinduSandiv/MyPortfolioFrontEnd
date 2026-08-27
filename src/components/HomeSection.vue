@@ -288,23 +288,26 @@ onMounted(fetchData);
 .skill-badge {
   display: inline-block;
   padding: 0.5rem 1rem;
-  background: rgba(238, 145, 82, 0.2);
-  border: 1px solid #ee9152;
+  background: linear-gradient(135deg, #f6b27d 0%, #ee9152 100%);
+  border: 1px solid rgba(255, 220, 195, 0.7);
   border-radius: 20px;
   font-size: 0.9rem;
-  font-weight: 500;
-  color: #ee9152;
+  font-weight: 700;
+  color: #fffaf6;
+  text-shadow: 0 1px 2px rgba(86, 45, 24, 0.35);
+  box-shadow: 0 6px 16px rgba(238, 145, 82, 0.24);
   transition: all 0.3s ease;
 }
 [data-theme='dark'] .skill-badge {
-  background: rgba(242, 182, 137, 0.15);
-  border-color: #f2b689;
-  color: #f2b689;
+  background: linear-gradient(135deg, #f8bd91 0%, #ee9152 100%);
+  border-color: rgba(255, 224, 205, 0.8);
+  color: #261812;
+  text-shadow: none;
 }
 .skill-badge:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(238, 145, 82, 0.2);
-  background: rgba(238, 145, 82, 0.3);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(238, 145, 82, 0.38);
+  filter: saturate(1.08) brightness(1.04);
 }
 .content-section {
   width: 100%;
@@ -400,16 +403,19 @@ onMounted(fetchData);
 .tech-tag {
   display: inline-block;
   padding: 0.3rem 0.7rem;
-  background: rgba(238, 145, 82, 0.15);
-  border-radius: 4px;
+  background: linear-gradient(135deg, #f6b27d 0%, #ee9152 100%);
+  border: 1px solid rgba(255, 220, 195, 0.65);
+  border-radius: 999px;
   font-size: 0.75rem;
-  font-weight: 500;
-  color: #ee9152;
+  font-weight: 700;
+  color: #fffaf6;
+  text-shadow: 0 1px 2px rgba(86, 45, 24, 0.3);
   white-space: nowrap;
 }
 [data-theme='dark'] .tech-tag {
-  background: rgba(242, 182, 137, 0.2);
-  color: #f2b689;
+  background: linear-gradient(135deg, #f8bd91 0%, #ee9152 100%);
+  color: #261812;
+  text-shadow: none;
 }
 .tech-tag.more {
   background: #ee9152;
