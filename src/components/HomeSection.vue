@@ -1,6 +1,6 @@
 <template>
   <section class="home-section">
-    <!-- Hero Section -->
+    <!-- Hero -->
     <div class="hero">
       <div class="hero-content">
         <h1 class="hero-title">{{ heroTitle }}</h1>
@@ -14,7 +14,7 @@
       <div class="hero-accent"></div>
     </div>
 
-    <!-- Top Projects -->
+    <!-- Featured Projects -->
     <section class="content-section">
       <div class="section-header">
         <h2 class="section-title">Featured Projects</h2>
@@ -40,10 +40,17 @@
           <div class="card-content">
             <h3 class="project-title">{{ project.project_title }}</h3>
             <div class="tech-stack">
-              <span v-for="tech in JSON.parse(project.technologies || '[]').slice(0, 3)" :key="tech" class="tech-tag">
+              <span
+                v-for="tech in JSON.parse(project.technologies || '[]').slice(0, 3)"
+                :key="tech"
+                class="tech-tag"
+              >
                 {{ tech }}
               </span>
-              <span v-if="JSON.parse(project.technologies || '[]').length > 3" class="tech-tag more">
+              <span
+                v-if="JSON.parse(project.technologies || '[]').length > 3"
+                class="tech-tag more"
+              >
                 +{{ JSON.parse(project.technologies || '[]').length - 3 }}
               </span>
             </div>
@@ -52,7 +59,6 @@
         </div>
       </div>
 
-      <!-- No Projects Data -->
       <div v-else class="no-data">
         <p>No featured projects available</p>
       </div>
@@ -88,29 +94,23 @@
         </div>
       </div>
 
-      <!-- No Achievements Data -->
       <div v-else class="no-data">
         <p>🎯 No achievements available</p>
       </div>
     </section>
 
-    <!-- Project Detail Popup -->
-    <transition name="modal">
-      <ProjectPopup
-        v-if="selectedProjectData"
-        :project="selectedProjectData"
-        @close="selectedProjectData = null"
-      />
-    </transition>
+    <!-- Popups -->
+    <ProjectPopup
+      v-if="selectedProjectData"
+      :project="selectedProjectData"
+      @close="selectedProjectData = null"
+    />
 
-    <!-- Achievement Detail Popup -->
-    <transition name="modal">
-      <AchievementPopup
-        v-if="selectedAchievementData"
-        :achievement="selectedAchievementData"
-        @close="selectedAchievementData = null"
-      />
-    </transition>
+    <AchievementPopup
+      v-if="selectedAchievementData"
+      :achievement="selectedAchievementData"
+      @close="selectedAchievementData = null"
+    />
   </section>
 </template>
 
@@ -122,7 +122,7 @@ import AchievementPopup from './AchievementPopup.vue';
 import LoadingSpinner from './LoadingSpinner.vue';
 
 const props = defineProps({
-  toastRef: Object
+  toastRef: Object,
 });
 
 const heroTitle = ref('Thevindu Hennayake');
@@ -140,39 +140,33 @@ const achievementsError = ref(null);
 const selectedProjectData = ref(null);
 const selectedAchievementData = ref(null);
 
-const recentAchievements = computed(() => {
-  return achievements.value.slice(0, 3);
-});
+const recentAchievements = computed(() => achievements.value.slice(0, 3));
 
 const selectProject = (project) => {
   selectedProjectData.value = project;
-  document.body.style.overflow = 'hidden';
 };
 
 const selectAchievement = (achievement) => {
   selectedAchievementData.value = achievement;
-  document.body.style.overflow = 'hidden';
 };
 
 const formatDate = (dateString) => {
+  if (!dateString) return '';
   return new Date(dateString).toLocaleDateString('en-US', {
     year: 'numeric',
-    month: 'short'
+    month: 'short',
   });
 };
 
-// Separate fetch functions for retry
 const fetchTagline = async () => {
   try {
-    const taglineData = await api.getTagline();
-    if (taglineData.tagline) {
-      heroTagline.value = taglineData.tagline;
+    const data = await api.getTagline();
+    if (data.tagline) heroTagline.value = data.tagline;
+    if (data.languages) {
+      topSkills.value = data.languages.split(' | ').map((s) => s.trim());
     }
-    if (taglineData.languages) {
-      topSkills.value = taglineData.languages.split(' | ').map(s => s.trim());
-    }
-  } catch (error) {
-    console.error('Error fetching tagline:', error);
+  } catch (_) {
+    // ignore
   }
 };
 
@@ -180,11 +174,11 @@ const fetchProjects = async () => {
   try {
     projectsLoading.value = true;
     projectsError.value = null;
-    const projectsData = await api.getFeaturedProjects(3);
-    topProjects.value = projectsData.projects || [];
-  } catch (error) {
-    projectsError.value = error.message;
-    props.toastRef?.addToast(error.message, 'error', 'Failed to load projects');
+    const data = await api.getFeaturedProjects(3);
+    topProjects.value = data.projects || [];
+  } catch (err) {
+    projectsError.value = err.message || 'Failed to load projects';
+    props.toastRef?.addToast(projectsError.value, 'error', 'Failed to load projects');
   } finally {
     projectsLoading.value = false;
   }
@@ -194,11 +188,11 @@ const fetchAchievements = async () => {
   try {
     achievementsLoading.value = true;
     achievementsError.value = null;
-    const achievementsData = await api.getAchievements(5);
-    achievements.value = achievementsData.achievements || [];
-  } catch (error) {
-    achievementsError.value = error.message;
-    props.toastRef?.addToast(error.message, 'error', 'Failed to load achievements');
+    const data = await api.getAchievements(5);
+    achievements.value = data.achievements || [];
+  } catch (err) {
+    achievementsError.value = err.message || 'Failed to load achievements';
+    props.toastRef?.addToast(achievementsError.value, 'error', 'Failed to load achievements');
   } finally {
     achievementsLoading.value = false;
   }
@@ -210,9 +204,7 @@ const fetchData = async () => {
   await fetchAchievements();
 };
 
-onMounted(() => {
-  fetchData();
-});
+onMounted(fetchData);
 </script>
 
 <style scoped>
@@ -223,7 +215,6 @@ onMounted(() => {
   gap: 4rem;
   animation: fadeIn 0.6s ease-out;
 }
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -234,8 +225,6 @@ onMounted(() => {
     transform: translateY(0);
   }
 }
-
-/* Hero Section */
 .hero {
   position: relative;
   padding: 3rem 2rem;
@@ -244,12 +233,10 @@ onMounted(() => {
   overflow: hidden;
   border: 1px solid rgba(242, 182, 137, 0.2);
 }
-
 [data-theme='dark'] .hero {
   background: linear-gradient(135deg, rgba(242, 182, 137, 0.05) 0%, rgba(238, 145, 82, 0.02) 100%);
   border-color: rgba(242, 182, 137, 0.1);
 }
-
 .hero-accent {
   position: absolute;
   top: -50px;
@@ -261,21 +248,19 @@ onMounted(() => {
   animation: float 8s ease-in-out infinite;
   z-index: 0;
 }
-
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translate(0, 0);
   }
   50% {
     transform: translate(-30px, 30px);
   }
 }
-
 .hero-content {
   position: relative;
   z-index: 1;
 }
-
 .hero-title {
   font-size: 2.8rem;
   font-weight: 700;
@@ -283,28 +268,23 @@ onMounted(() => {
   color: #382e28;
   letter-spacing: -0.5px;
 }
-
 [data-theme='dark'] .hero-title {
   color: #f0e0d8;
 }
-
 .hero-subtitle {
   font-size: 1.3rem;
   color: #8b7355;
   margin: 0 0 1.5rem 0;
   font-weight: 500;
 }
-
 [data-theme='dark'] .hero-subtitle {
   color: #d4b5a0;
 }
-
 .hero-skills {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
 }
-
 .skill-badge {
   display: inline-block;
   padding: 0.5rem 1rem;
@@ -316,33 +296,27 @@ onMounted(() => {
   color: #ee9152;
   transition: all 0.3s ease;
 }
-
 [data-theme='dark'] .skill-badge {
   background: rgba(242, 182, 137, 0.15);
   border-color: #f2b689;
   color: #f2b689;
 }
-
 .skill-badge:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(238, 145, 82, 0.2);
   background: rgba(238, 145, 82, 0.3);
 }
-
-/* Content Section */
 .content-section {
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
-
 .section-header {
   display: flex;
   align-items: center;
   gap: 1.5rem;
 }
-
 .section-title {
   font-size: 1.8rem;
   font-weight: 600;
@@ -350,26 +324,21 @@ onMounted(() => {
   color: #382e28;
   white-space: nowrap;
 }
-
 [data-theme='dark'] .section-title {
   color: #f0e0d8;
 }
-
 .title-underline {
   height: 3px;
   flex: 1;
   background: linear-gradient(90deg, #ee9152 0%, rgba(238, 145, 82, 0) 100%);
   border-radius: 2px;
 }
-
-/* Projects Grid */
 .projects-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
-
 .project-card {
   position: relative;
   background: linear-gradient(135deg, #ffffff 0%, #faf8f5 100%);
@@ -379,27 +348,23 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   overflow: hidden;
-  min-height: 160px;
+  min-height: 140px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
 }
-
 [data-theme='dark'] .project-card {
   background: linear-gradient(135deg, #1a1a1a 0%, #242424 100%);
   border-color: #333;
 }
-
 .project-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
   border-color: #f2b689;
 }
-
 [data-theme='dark'] .project-card:hover {
   box-shadow: 0 12px 32px rgba(242, 182, 137, 0.15);
 }
-
 .card-hover-effect {
   position: absolute;
   top: 0;
@@ -411,33 +376,27 @@ onMounted(() => {
   transition: opacity 0.3s ease;
   pointer-events: none;
 }
-
 .project-card:hover .card-hover-effect {
   opacity: 1;
 }
-
 .card-content {
   position: relative;
   z-index: 1;
 }
-
 .project-title {
   font-size: 1.2rem;
   font-weight: 600;
   margin: 0 0 0.75rem 0;
   color: #382e28;
 }
-
 [data-theme='dark'] .project-title {
   color: #f0e0d8;
 }
-
 .tech-stack {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
-
 .tech-tag {
   display: inline-block;
   padding: 0.3rem 0.7rem;
@@ -448,24 +407,19 @@ onMounted(() => {
   color: #ee9152;
   white-space: nowrap;
 }
-
 [data-theme='dark'] .tech-tag {
   background: rgba(242, 182, 137, 0.2);
   color: #f2b689;
 }
-
 .tech-tag.more {
   background: #ee9152;
   color: white;
 }
-
-/* Achievements Grid */
 .achievements-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
 }
-
 .achievement-card {
   background: linear-gradient(135deg, #ffffff 0%, #faf8f5 100%);
   border: 1px solid #e8ddd5;
@@ -477,51 +431,41 @@ onMounted(() => {
   display: flex;
   align-items: center;
 }
-
 [data-theme='dark'] .achievement-card {
   background: linear-gradient(135deg, #1a1a1a 0%, #242424 100%);
   border-color: #333;
 }
-
 .achievement-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(242, 182, 137, 0.2);
   border-color: #f2b689;
 }
-
 .achievement-content {
   width: 100%;
 }
-
 .achievement-title {
   font-size: 1.1rem;
   font-weight: 600;
   margin: 0 0 0.5rem 0;
   color: #382e28;
 }
-
 [data-theme='dark'] .achievement-title {
   color: #f0e0d8;
 }
-
 .achievement-date {
   font-size: 0.9rem;
   color: #8b7355;
   margin: 0;
 }
-
 [data-theme='dark'] .achievement-date {
   color: #a08070;
 }
-
-/* Loading & Error States */
 .loading-container {
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 2rem;
 }
-
 .error-state {
   padding: 2rem;
   background: rgba(239, 68, 68, 0.1);
@@ -533,17 +477,14 @@ onMounted(() => {
   gap: 1rem;
   flex-wrap: wrap;
 }
-
 [data-theme='dark'] .error-state {
   background: rgba(239, 68, 68, 0.15);
   color: #fca5a5;
 }
-
 .error-state p {
   margin: 0;
   flex: 1;
 }
-
 .retry-small {
   padding: 0.4rem 1.2rem;
   background: #ee9152;
@@ -556,18 +497,14 @@ onMounted(() => {
   transition: all 0.3s ease;
   white-space: nowrap;
 }
-
 .retry-small:hover {
   background: #d47d44;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(238, 145, 82, 0.3);
 }
-
 .retry-small:active {
   transform: translateY(0);
 }
-
-/* No Data State */
 .no-data {
   padding: 2rem;
   text-align: center;
@@ -576,55 +513,34 @@ onMounted(() => {
   border-radius: 8px;
   border: 1px dashed #ddd;
 }
-
 [data-theme='dark'] .no-data {
   color: #666;
   background: rgba(255, 255, 255, 0.02);
   border-color: #333;
 }
-
-/* Animations */
-.modal-enter-active,
-.modal-leave-active {
-  transition: all 0.3s ease;
-}
-
-.modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
-}
-
-/* Responsive */
 @media (max-width: 768px) {
   .home-section {
     gap: 2rem;
   }
-
   .hero {
     padding: 2rem 1.5rem;
   }
-
   .hero-title {
     font-size: 2rem;
   }
-
   .hero-subtitle {
     font-size: 1rem;
   }
-
   .section-title {
     font-size: 1.4rem;
   }
-
   .projects-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-
   .achievements-grid {
     grid-template-columns: 1fr;
   }
-
   .error-state {
     flex-direction: column;
     text-align: center;

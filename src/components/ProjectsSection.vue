@@ -2,7 +2,6 @@
   <section class="projects-section">
     <h1 class="section-title">Projects</h1>
 
-    <!-- Search & Filter -->
     <div class="filter-controls">
       <input
         v-model="searchQuery"
@@ -24,18 +23,15 @@
       </select>
     </div>
 
-    <!-- Loading State -->
     <div v-if="projectsLoading" class="loading-container">
       <LoadingSpinner text="Loading projects..." />
     </div>
 
-    <!-- Error State -->
     <div v-else-if="projectsError" class="error-state">
       <p>{{ projectsError }}</p>
       <button @click="fetchProjects" class="retry-small">Retry</button>
     </div>
 
-    <!-- Projects Grid -->
     <div v-else-if="paginatedProjects.length > 0" class="projects-grid">
       <div
         v-for="project in paginatedProjects"
@@ -47,32 +43,36 @@
           <h3 class="project-title">{{ project.project_title }}</h3>
           <p class="project-description">{{ project.project_description }}</p>
           <div class="tech-stack">
-            <span v-for="tech in JSON.parse(project.technologies || '[]').slice(0, 3)" :key="tech" class="tech-tag">
+            <span
+              v-for="tech in JSON.parse(project.technologies || '[]').slice(0, 3)"
+              :key="tech"
+              class="tech-tag"
+            >
               {{ tech }}
             </span>
-            <span v-if="JSON.parse(project.technologies || '[]').length > 3" class="tech-tag more">
+            <span
+              v-if="JSON.parse(project.technologies || '[]').length > 3"
+              class="tech-tag more"
+            >
               +{{ JSON.parse(project.technologies || '[]').length - 3 }}
             </span>
           </div>
-        </div>
-        <div class="card-footer">
-          <span class="points">{{ project.project_points }} pts</span>
         </div>
         <div class="card-hover-effect"></div>
       </div>
     </div>
 
-    <!-- Empty State -->
-    <div v-else-if="!projectsLoading && !projectsError && displayedProjects.length === 0" class="empty-state">
+    <div
+      v-else-if="!projectsLoading && !projectsError && displayedProjects.length === 0"
+      class="empty-state"
+    >
       <p>No projects found matching your criteria</p>
     </div>
 
-    <!-- No Data State -->
     <div v-else-if="!projectsLoading && !projectsError && projects.length === 0" class="no-data">
       <p>No projects available</p>
     </div>
 
-    <!-- Pagination -->
     <div v-if="!projectsLoading && !projectsError && totalPages > 1" class="pagination">
       <button
         :disabled="currentPage === 1"
@@ -91,14 +91,11 @@
       </button>
     </div>
 
-    <!-- Project Detail Popup -->
-    <transition name="modal">
-      <ProjectPopup
-        v-if="selectedProjectData"
-        :project="selectedProjectData"
-        @close="closeProjectPopup"
-      />
-    </transition>
+    <ProjectPopup
+      v-if="selectedProjectData"
+      :project="selectedProjectData"
+      @close="selectedProjectData = null"
+    />
   </section>
 </template>
 
@@ -109,7 +106,7 @@ import ProjectPopup from './ProjectPopup.vue';
 import LoadingSpinner from './LoadingSpinner.vue';
 
 const props = defineProps({
-  toastRef: Object
+  toastRef: Object,
 });
 
 const projects = ref([]);
@@ -124,46 +121,40 @@ const pageSize = 10;
 
 const selectedProjectData = ref(null);
 
-// Extract all unique technologies from projects
 const allTechs = computed(() => {
   const techs = new Set();
-  projects.value.forEach(project => {
+  projects.value.forEach((project) => {
     try {
       const projTechs = JSON.parse(project.technologies || '[]');
-      projTechs.forEach(tech => techs.add(tech));
-    } catch (e) {
-      // If technologies is not valid JSON, skip
-    }
+      projTechs.forEach((t) => techs.add(t));
+    } catch (_) {}
   });
   return Array.from(techs).sort();
 });
 
-// Filter and search projects
 const displayedProjects = computed(() => {
   let filtered = projects.value;
 
-  // Search filter
   if (searchQuery.value.trim()) {
-    const query = searchQuery.value.toLowerCase().trim();
-    filtered = filtered.filter(p =>
-      p.project_title.toLowerCase().includes(query) ||
-      p.project_description.toLowerCase().includes(query)
+    const q = searchQuery.value.toLowerCase().trim();
+    filtered = filtered.filter(
+      (p) =>
+        p.project_title.toLowerCase().includes(q) ||
+        p.project_description.toLowerCase().includes(q)
     );
   }
 
-  // Technology filter
   if (selectedTech.value) {
-    filtered = filtered.filter(p => {
+    filtered = filtered.filter((p) => {
       try {
         const techs = JSON.parse(p.technologies || '[]');
         return techs.includes(selectedTech.value);
-      } catch (e) {
+      } catch (_) {
         return false;
       }
     });
   }
 
-  // Sort
   const sorted = [...filtered];
   switch (sortOrder.value) {
     case 'oldest':
@@ -177,20 +168,15 @@ const displayedProjects = computed(() => {
       sorted.sort((a, b) => new Date(b.creation_ts) - new Date(a.creation_ts));
       break;
   }
-
   return sorted;
 });
 
-// Pagination
 const totalPages = computed(() => Math.ceil(displayedProjects.value.length / pageSize));
-
 const paginatedProjects = computed(() => {
   const start = (currentPage.value - 1) * pageSize;
-  const end = start + pageSize;
-  return displayedProjects.value.slice(start, end);
+  return displayedProjects.value.slice(start, start + pageSize);
 });
 
-// Reset to first page when filters change
 const resetPagination = () => {
   currentPage.value = 1;
 };
@@ -201,65 +187,37 @@ const goToPage = (page) => {
   }
 };
 
-// Watch for filter changes to reset pagination
-watch([searchQuery, selectedTech, sortOrder], () => {
-  resetPagination();
-});
-
-// Popup handlers
 const selectProject = (project) => {
   selectedProjectData.value = project;
-  document.body.style.overflow = 'hidden';
 };
 
-const closeProjectPopup = () => {
-  selectedProjectData.value = null;
-  document.body.style.overflow = '';
-};
+watch([searchQuery, selectedTech, sortOrder], resetPagination);
 
-// Search/Filter handlers
-const handleSearch = () => {
-  // Handled by watch
-};
+const handleSearch = () => {};
+const handleFilter = () => {};
+const handleSort = () => {};
 
-const handleFilter = () => {
-  // Handled by watch
-};
-
-const handleSort = () => {
-  // Handled by watch
-};
-
-// Fetch projects from API
 const fetchProjects = async () => {
   try {
     projectsLoading.value = true;
     projectsError.value = null;
-    
     const data = await api.getProjects({
       sort: sortOrder.value,
       page: 1,
-      pageSize: 100 // Get all projects for client-side filtering
+      pageSize: 100,
     });
-    
     projects.value = data.projects || [];
-    
-    if (projects.value.length === 0) {
-      // No projects, show message
-    }
-  } catch (error) {
-    projectsError.value = error.message || 'Failed to load projects';
+  } catch (err) {
+    projectsError.value = err.message || 'Failed to load projects';
     if (props.toastRef?.addToast) {
-      props.toastRef.addToast(error.message, 'error', 'Failed to load projects');
+      props.toastRef.addToast(projectsError.value, 'error', 'Failed to load projects');
     }
   } finally {
     projectsLoading.value = false;
   }
 };
 
-onMounted(() => {
-  fetchProjects();
-});
+onMounted(fetchProjects);
 </script>
 
 <style scoped>
@@ -270,7 +228,6 @@ onMounted(() => {
   gap: 2rem;
   animation: fadeIn 0.6s ease-out;
 }
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -281,25 +238,20 @@ onMounted(() => {
     transform: translateY(0);
   }
 }
-
 .section-title {
   font-size: 2rem;
   font-weight: 700;
   margin: 0;
   color: #382e28;
 }
-
 [data-theme='dark'] .section-title {
   color: #f0e0d8;
 }
-
-/* Filter Controls */
 .filter-controls {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
 }
-
 .search-input,
 .filter-select {
   padding: 0.75rem 1rem;
@@ -311,33 +263,27 @@ onMounted(() => {
   background: white;
   color: #382e28;
 }
-
 [data-theme='dark'] .search-input,
 [data-theme='dark'] .filter-select {
   background: #1a1a1a;
   border-color: #333;
   color: #f0e0d8;
 }
-
 .search-input:focus,
 .filter-select:focus {
   outline: none;
   border-color: #ee9152;
   box-shadow: 0 0 0 3px rgba(238, 145, 82, 0.1);
 }
-
 .search-input {
   flex: 1;
   min-width: 200px;
 }
-
-/* Projects Grid */
 .projects-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
 }
-
 .project-card {
   position: relative;
   background: linear-gradient(135deg, #ffffff 0%, #faf8f5 100%);
@@ -349,25 +295,20 @@ onMounted(() => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  min-height: 240px;
+  min-height: 200px;
 }
-
 [data-theme='dark'] .project-card {
   background: linear-gradient(135deg, #1a1a1a 0%, #242424 100%);
   border-color: #333;
 }
-
 .project-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
   border-color: #f2b689;
 }
-
 [data-theme='dark'] .project-card:hover {
   box-shadow: 0 16px 40px rgba(242, 182, 137, 0.2);
 }
-
 .card-hover-effect {
   position: absolute;
   top: 0;
@@ -379,27 +320,25 @@ onMounted(() => {
   transition: opacity 0.3s ease;
   pointer-events: none;
 }
-
 .project-card:hover .card-hover-effect {
   opacity: 1;
 }
-
 .card-content {
   position: relative;
   z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
-
 .project-title {
   font-size: 1.2rem;
   font-weight: 600;
   margin: 0 0 0.5rem 0;
   color: #382e28;
 }
-
 [data-theme='dark'] .project-title {
   color: #f0e0d8;
 }
-
 .project-description {
   font-size: 0.9rem;
   color: #666;
@@ -409,19 +348,17 @@ onMounted(() => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  flex: 1;
 }
-
 [data-theme='dark'] .project-description {
   color: #aaa;
 }
-
 .tech-stack {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 1rem;
+  margin-top: auto;
 }
-
 .tech-tag {
   display: inline-block;
   padding: 0.3rem 0.7rem;
@@ -431,54 +368,24 @@ onMounted(() => {
   font-weight: 500;
   color: #ee9152;
 }
-
 [data-theme='dark'] .tech-tag {
   background: rgba(242, 182, 137, 0.2);
   color: #f2b689;
 }
-
 .tech-tag.more {
   background: #ee9152;
   color: white;
 }
-
 [data-theme='dark'] .tech-tag.more {
   background: #f2b689;
   color: #1a1a1a;
 }
-
-.card-footer {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 1rem;
-  border-top: 1px solid #e8ddd5;
-}
-
-[data-theme='dark'] .card-footer {
-  border-top-color: #333;
-}
-
-.points {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #ee9152;
-}
-
-[data-theme='dark'] .points {
-  color: #f2b689;
-}
-
-/* Loading & Error States */
 .loading-container {
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 3rem;
 }
-
 .error-state {
   padding: 2rem;
   background: rgba(239, 68, 68, 0.1);
@@ -490,17 +397,14 @@ onMounted(() => {
   gap: 1rem;
   flex-wrap: wrap;
 }
-
 [data-theme='dark'] .error-state {
   background: rgba(239, 68, 68, 0.15);
   color: #fca5a5;
 }
-
 .error-state p {
   margin: 0;
   flex: 1;
 }
-
 .retry-small {
   padding: 0.4rem 1.2rem;
   background: #ee9152;
@@ -513,25 +417,20 @@ onMounted(() => {
   transition: all 0.3s ease;
   white-space: nowrap;
 }
-
 .retry-small:hover {
   background: #d47d44;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(238, 145, 82, 0.3);
 }
-
 .empty-state {
   text-align: center;
   padding: 3rem;
   color: #8b7355;
   font-size: 1.1rem;
 }
-
 [data-theme='dark'] .empty-state {
   color: #a08070;
 }
-
-/* No Data State */
 .no-data {
   padding: 2rem;
   text-align: center;
@@ -540,14 +439,11 @@ onMounted(() => {
   border-radius: 8px;
   border: 1px dashed #ddd;
 }
-
 [data-theme='dark'] .no-data {
   color: #666;
   background: rgba(255, 255, 255, 0.02);
   border-color: #333;
 }
-
-/* Pagination */
 .pagination {
   display: flex;
   justify-content: center;
@@ -559,12 +455,10 @@ onMounted(() => {
   border-radius: 8px;
   border: 1px solid rgba(242, 182, 137, 0.2);
 }
-
 [data-theme='dark'] .pagination {
   background: rgba(242, 182, 137, 0.05);
   border-color: rgba(242, 182, 137, 0.1);
 }
-
 .pagination-btn {
   padding: 0.6rem 1.2rem;
   background: #f2b689;
@@ -575,52 +469,32 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.3s ease;
 }
-
 .pagination-btn:hover:not(:disabled) {
   background: #ee9152;
   transform: translateY(-2px);
 }
-
 .pagination-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
-
 .page-info {
   font-weight: 600;
   color: #382e28;
 }
-
 [data-theme='dark'] .page-info {
   color: #f0e0d8;
 }
-
-/* Animations */
-.modal-enter-active,
-.modal-leave-active {
-  transition: all 0.3s ease;
-}
-
-.modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
-}
-
-/* Responsive */
 @media (max-width: 768px) {
   .filter-controls {
     flex-direction: column;
   }
-
   .search-input,
   .filter-select {
     width: 100%;
   }
-
   .projects-grid {
     grid-template-columns: 1fr;
   }
-
   .pagination {
     flex-direction: column;
     gap: 1rem;
