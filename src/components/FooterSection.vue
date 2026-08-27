@@ -19,17 +19,31 @@
       <div class="footer-section">
         <h4 class="footer-heading">Connect</h4>
         <div class="social-links">
-          <a href="https://linkedin.com" target="_blank" rel="noopener" class="social-link linkedin" title="LinkedIn">
-            in
+          <a 
+            :href="socialLinks.linkedin" 
+            target="_blank" 
+            rel="noopener" 
+            class="social-link linkedin" 
+            title="LinkedIn"
+          >
+            <img src="/linkedin.png" alt="LinkedIn" class="social-icon" />
           </a>
-          <a href="https://github.com" target="_blank" rel="noopener" class="social-link github" title="GitHub">
-            ⚙️
+          <a 
+            :href="socialLinks.github" 
+            target="_blank" 
+            rel="noopener" 
+            class="social-link github" 
+            title="GitHub"
+          >
+            <img src="/github.png" alt="GitHub" class="social-icon" />
           </a>
-          <a href="https://twitter.com" target="_blank" rel="noopener" class="social-link twitter" title="Twitter">
-            𝕏
-          </a>
-          <a href="mailto:contact@example.com" class="social-link email" title="Email">
-            ✉️
+          <a 
+            href="#" 
+            class="social-link email" 
+            title="Email"
+            @click.prevent="sendEmail"
+          >
+            <img src="/mail.png" alt="Email" class="social-icon" />
           </a>
         </div>
       </div>
@@ -44,9 +58,25 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 
 const currentYear = ref(new Date().getFullYear());
+
+const socialLinks = {
+  linkedin: 'https://www.linkedin.com/in/thevindu-hennayake-973913254',
+  github: 'https://github.com/ThevinduSandiv'
+};
+
+const sendEmail = () => {
+  const subject = 'Hello Thevindu';
+  const body = 'Hi Thevindu,\n\nI would like to get in touch with you.\n\nBest regards';
+  
+  // Create mailto link with both emails
+  const mailtoLink = `mailto:me@thevinduhennayake.com,thevindusabdiv@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  
+  // Open email client
+  window.location.href = mailtoLink;
+};
 </script>
 
 <style scoped>
@@ -139,43 +169,57 @@ const currentYear = ref(new Date().getFullYear());
 }
 
 .social-link {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  color: white;
-  font-weight: 600;
   transition: all 0.3s ease;
-  font-size: 0.9rem;
+  background: white;
+  border: 2px solid #e8ddd5;
+  overflow: hidden;
 }
 
-.social-link.linkedin {
-  background: #0A66C2;
+[data-theme='dark'] .social-link {
+  background: #2a2a2a;
+  border-color: #444;
 }
 
-.social-link.github {
-  background: #333;
-}
-
-[data-theme='dark'] .social-link.github {
-  background: #f0e0d8;
-  color: #382e28;
-}
-
-.social-link.twitter {
-  background: #000;
-}
-
-.social-link.email {
-  background: #ee9152;
+.social-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
 }
 
 .social-link:hover {
   transform: translateY(-4px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  border-color: #ee9152;
+}
+
+[data-theme='dark'] .social-link:hover {
+  box-shadow: 0 6px 16px rgba(242, 182, 137, 0.2);
+  border-color: #f2b689;
+}
+
+/* Specific styles for each social link (optional hover effects) */
+.social-link.linkedin:hover {
+  border-color: #0A66C2;
+}
+
+.social-link.github:hover {
+  border-color: #333;
+}
+
+[data-theme='dark'] .social-link.github:hover {
+  border-color: #f0e0d8;
+}
+
+.social-link.email:hover {
+  border-color: #ee9152;
 }
 
 .footer-bottom {
@@ -210,6 +254,16 @@ const currentYear = ref(new Date().getFullYear());
 
   .footer-bottom {
     padding: 1rem 1.5rem;
+  }
+
+  .social-link {
+    width: 40px;
+    height: 40px;
+  }
+
+  .social-icon {
+    width: 20px;
+    height: 20px;
   }
 }
 </style>

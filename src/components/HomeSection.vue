@@ -27,9 +27,10 @@
 
       <div v-else-if="projectsError" class="error-state">
         <p>{{ projectsError }}</p>
+        <button @click="fetchProjects" class="retry-small">Retry</button>
       </div>
 
-      <div v-else class="projects-grid">
+      <div v-else-if="topProjects.length > 0" class="projects-grid">
         <div
           v-for="project in topProjects"
           :key="project.project_id"
@@ -50,6 +51,11 @@
           <div class="card-hover-effect"></div>
         </div>
       </div>
+
+      <!-- No Projects Data -->
+      <div v-else class="no-data">
+        <p>No featured projects available</p>
+      </div>
     </section>
 
     <!-- Recent Achievements -->
@@ -65,6 +71,7 @@
 
       <div v-else-if="achievementsError" class="error-state">
         <p>{{ achievementsError }}</p>
+        <button @click="fetchAchievements" class="retry-small">Retry</button>
       </div>
 
       <div v-else-if="recentAchievements.length > 0" class="achievements-grid">
@@ -81,8 +88,9 @@
         </div>
       </div>
 
-      <div v-else class="empty-state">
-        <p>🎯 Achievements coming soon...</p>
+      <!-- No Achievements Data -->
+      <div v-else class="no-data">
+        <p>🎯 No achievements available</p>
       </div>
     </section>
 
@@ -153,9 +161,9 @@ const formatDate = (dateString) => {
   });
 };
 
-const fetchData = async () => {
+// Separate fetch functions for retry
+const fetchTagline = async () => {
   try {
-    // Fetch tagline
     const taglineData = await api.getTagline();
     if (taglineData.tagline) {
       heroTagline.value = taglineData.tagline;
@@ -166,32 +174,40 @@ const fetchData = async () => {
   } catch (error) {
     console.error('Error fetching tagline:', error);
   }
+};
 
-  // Fetch featured projects
+const fetchProjects = async () => {
   try {
     projectsLoading.value = true;
+    projectsError.value = null;
     const projectsData = await api.getFeaturedProjects(3);
     topProjects.value = projectsData.projects || [];
-    projectsError.value = null;
   } catch (error) {
     projectsError.value = error.message;
     props.toastRef?.addToast(error.message, 'error', 'Failed to load projects');
   } finally {
     projectsLoading.value = false;
   }
+};
 
-  // Fetch achievements
+const fetchAchievements = async () => {
   try {
     achievementsLoading.value = true;
+    achievementsError.value = null;
     const achievementsData = await api.getAchievements(5);
     achievements.value = achievementsData.achievements || [];
-    achievementsError.value = null;
   } catch (error) {
     achievementsError.value = error.message;
     props.toastRef?.addToast(error.message, 'error', 'Failed to load achievements');
   } finally {
     achievementsLoading.value = false;
   }
+};
+
+const fetchData = async () => {
+  await fetchTagline();
+  await fetchProjects();
+  await fetchAchievements();
 };
 
 onMounted(() => {
@@ -512,6 +528,10 @@ onMounted(() => {
   border-left: 4px solid #ef4444;
   border-radius: 8px;
   color: #dc2626;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 [data-theme='dark'] .error-state {
@@ -519,16 +539,48 @@ onMounted(() => {
   color: #fca5a5;
 }
 
-/* Empty State */
-.empty-state {
-  text-align: center;
-  padding: 3rem;
-  color: #8b7355;
-  font-size: 1.1rem;
+.error-state p {
+  margin: 0;
+  flex: 1;
 }
 
-[data-theme='dark'] .empty-state {
-  color: #a08070;
+.retry-small {
+  padding: 0.4rem 1.2rem;
+  background: #ee9152;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.retry-small:hover {
+  background: #d47d44;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(238, 145, 82, 0.3);
+}
+
+.retry-small:active {
+  transform: translateY(0);
+}
+
+/* No Data State */
+.no-data {
+  padding: 2rem;
+  text-align: center;
+  color: #aaa;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  border: 1px dashed #ddd;
+}
+
+[data-theme='dark'] .no-data {
+  color: #666;
+  background: rgba(255, 255, 255, 0.02);
+  border-color: #333;
 }
 
 /* Animations */
@@ -571,6 +623,11 @@ onMounted(() => {
 
   .achievements-grid {
     grid-template-columns: 1fr;
+  }
+
+  .error-state {
+    flex-direction: column;
+    text-align: center;
   }
 }
 </style>

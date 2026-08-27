@@ -32,12 +32,13 @@
     <!-- Error State -->
     <div v-else-if="projectsError" class="error-state">
       <p>{{ projectsError }}</p>
+      <button @click="fetchProjects" class="retry-small">Retry</button>
     </div>
 
     <!-- Projects Grid -->
-    <div v-else class="projects-grid">
+    <div v-else-if="paginatedProjects.length > 0" class="projects-grid">
       <div
-        v-for="project in displayedProjects"
+        v-for="project in paginatedProjects"
         :key="project.project_id"
         class="project-card"
         @click="selectProject(project)"
@@ -49,25 +50,34 @@
             <span v-for="tech in JSON.parse(project.technologies || '[]').slice(0, 3)" :key="tech" class="tech-tag">
               {{ tech }}
             </span>
+            <span v-if="JSON.parse(project.technologies || '[]').length > 3" class="tech-tag more">
+              +{{ JSON.parse(project.technologies || '[]').length - 3 }}
+            </span>
           </div>
         </div>
         <div class="card-footer">
           <span class="points">{{ project.project_points }} pts</span>
         </div>
+        <div class="card-hover-effect"></div>
       </div>
     </div>
 
     <!-- Empty State -->
-    <div v-if="!projectsLoading && displayedProjects.length === 0" class="empty-state">
+    <div v-else-if="!projectsLoading && !projectsError && displayedProjects.length === 0" class="empty-state">
       <p>No projects found matching your criteria</p>
     </div>
 
+    <!-- No Data State -->
+    <div v-else-if="!projectsLoading && !projectsError && projects.length === 0" class="no-data">
+      <p>No projects available</p>
+    </div>
+
     <!-- Pagination -->
-    <div v-if="!projectsLoading && totalPages > 1" class="pagination">
+    <div v-if="!projectsLoading && !projectsError && totalPages > 1" class="pagination">
       <button
         :disabled="currentPage === 1"
         class="pagination-btn"
-        @click="currentPage--"
+        @click="goToPage(currentPage - 1)"
       >
         ← Previous
       </button>
@@ -75,7 +85,7 @@
       <button
         :disabled="currentPage === totalPages"
         class="pagination-btn"
-        @click="currentPage++"
+        @click="goToPage(currentPage + 1)"
       >
         Next →
       </button>
@@ -86,14 +96,14 @@
       <ProjectPopup
         v-if="selectedProjectData"
         :project="selectedProjectData"
-        @close="selectedProjectData = null"
+        @close="closeProjectPopup"
       />
     </transition>
   </section>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { api } from '@/services/api';
 import ProjectPopup from './ProjectPopup.vue';
 import LoadingSpinner from './LoadingSpinner.vue';
@@ -114,71 +124,134 @@ const pageSize = 10;
 
 const selectedProjectData = ref(null);
 
+// Extract all unique technologies from projects
 const allTechs = computed(() => {
   const techs = new Set();
   projects.value.forEach(project => {
-    const projTechs = JSON.parse(project.technologies || '[]');
-    projTechs.forEach(tech => techs.add(tech));
+    try {
+      const projTechs = JSON.parse(project.technologies || '[]');
+      projTechs.forEach(tech => techs.add(tech));
+    } catch (e) {
+      // If technologies is not valid JSON, skip
+    }
   });
   return Array.from(techs).sort();
 });
 
+// Filter and search projects
 const displayedProjects = computed(() => {
   let filtered = projects.value;
 
-  if (searchQuery.value) {
+  // Search filter
+  if (searchQuery.value.trim()) {
+    const query = searchQuery.value.toLowerCase().trim();
     filtered = filtered.filter(p =>
-      p.project_title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      p.project_description.toLowerCase().includes(searchQuery.value.toLowerCase())
+      p.project_title.toLowerCase().includes(query) ||
+      p.project_description.toLowerCase().includes(query)
     );
   }
 
+  // Technology filter
   if (selectedTech.value) {
-    filtered = filtered.filter(p =>
-      JSON.parse(p.technologies || '[]').includes(selectedTech.value)
-    );
+    filtered = filtered.filter(p => {
+      try {
+        const techs = JSON.parse(p.technologies || '[]');
+        return techs.includes(selectedTech.value);
+      } catch (e) {
+        return false;
+      }
+    });
   }
 
-  return filtered;
+  // Sort
+  const sorted = [...filtered];
+  switch (sortOrder.value) {
+    case 'oldest':
+      sorted.sort((a, b) => new Date(a.creation_ts) - new Date(b.creation_ts));
+      break;
+    case 'alpha':
+      sorted.sort((a, b) => a.project_title.localeCompare(b.project_title));
+      break;
+    case 'newest':
+    default:
+      sorted.sort((a, b) => new Date(b.creation_ts) - new Date(a.creation_ts));
+      break;
+  }
+
+  return sorted;
 });
 
+// Pagination
 const totalPages = computed(() => Math.ceil(displayedProjects.value.length / pageSize));
 
 const paginatedProjects = computed(() => {
   const start = (currentPage.value - 1) * pageSize;
-  return displayedProjects.value.slice(start, start + pageSize);
+  const end = start + pageSize;
+  return displayedProjects.value.slice(start, end);
 });
 
+// Reset to first page when filters change
+const resetPagination = () => {
+  currentPage.value = 1;
+};
+
+const goToPage = (page) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+  }
+};
+
+// Watch for filter changes to reset pagination
+watch([searchQuery, selectedTech, sortOrder], () => {
+  resetPagination();
+});
+
+// Popup handlers
 const selectProject = (project) => {
   selectedProjectData.value = project;
   document.body.style.overflow = 'hidden';
 };
 
+const closeProjectPopup = () => {
+  selectedProjectData.value = null;
+  document.body.style.overflow = '';
+};
+
+// Search/Filter handlers
 const handleSearch = () => {
-  currentPage.value = 1;
+  // Handled by watch
 };
 
 const handleFilter = () => {
-  currentPage.value = 1;
+  // Handled by watch
 };
 
 const handleSort = () => {
-  currentPage.value = 1;
+  // Handled by watch
 };
 
+// Fetch projects from API
 const fetchProjects = async () => {
   try {
     projectsLoading.value = true;
+    projectsError.value = null;
+    
     const data = await api.getProjects({
       sort: sortOrder.value,
       page: 1,
-      pageSize: 100
+      pageSize: 100 // Get all projects for client-side filtering
     });
+    
     projects.value = data.projects || [];
-    projectsError.value = null;
+    
+    if (projects.value.length === 0) {
+      // No projects, show message
+    }
   } catch (error) {
-    projectsError.value = error.message;
-    props.toastRef?.addToast(error.message, 'error', 'Failed to load projects');
+    projectsError.value = error.message || 'Failed to load projects';
+    if (props.toastRef?.addToast) {
+      props.toastRef.addToast(error.message, 'error', 'Failed to load projects');
+    }
   } finally {
     projectsLoading.value = false;
   }
@@ -266,6 +339,7 @@ onMounted(() => {
 }
 
 .project-card {
+  position: relative;
   background: linear-gradient(135deg, #ffffff 0%, #faf8f5 100%);
   border: 1px solid #e8ddd5;
   border-radius: 12px;
@@ -292,6 +366,27 @@ onMounted(() => {
 
 [data-theme='dark'] .project-card:hover {
   box-shadow: 0 16px 40px rgba(242, 182, 137, 0.2);
+}
+
+.card-hover-effect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(242, 182, 137, 0.05) 0%, rgba(238, 145, 82, 0.02) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.project-card:hover .card-hover-effect {
+  opacity: 1;
+}
+
+.card-content {
+  position: relative;
+  z-index: 1;
 }
 
 .project-title {
@@ -342,7 +437,19 @@ onMounted(() => {
   color: #f2b689;
 }
 
+.tech-tag.more {
+  background: #ee9152;
+  color: white;
+}
+
+[data-theme='dark'] .tech-tag.more {
+  background: #f2b689;
+  color: #1a1a1a;
+}
+
 .card-footer {
+  position: relative;
+  z-index: 1;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -378,11 +485,39 @@ onMounted(() => {
   border-left: 4px solid #ef4444;
   border-radius: 8px;
   color: #dc2626;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 [data-theme='dark'] .error-state {
   background: rgba(239, 68, 68, 0.15);
   color: #fca5a5;
+}
+
+.error-state p {
+  margin: 0;
+  flex: 1;
+}
+
+.retry-small {
+  padding: 0.4rem 1.2rem;
+  background: #ee9152;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.retry-small:hover {
+  background: #d47d44;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(238, 145, 82, 0.3);
 }
 
 .empty-state {
@@ -396,6 +531,22 @@ onMounted(() => {
   color: #a08070;
 }
 
+/* No Data State */
+.no-data {
+  padding: 2rem;
+  text-align: center;
+  color: #aaa;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  border: 1px dashed #ddd;
+}
+
+[data-theme='dark'] .no-data {
+  color: #666;
+  background: rgba(255, 255, 255, 0.02);
+  border-color: #333;
+}
+
 /* Pagination */
 .pagination {
   display: flex;
@@ -404,12 +555,14 @@ onMounted(() => {
   gap: 2rem;
   margin-top: 2rem;
   padding: 1.5rem;
-  background: #f9e9d9;
+  background: rgba(242, 182, 137, 0.1);
   border-radius: 8px;
+  border: 1px solid rgba(242, 182, 137, 0.2);
 }
 
 [data-theme='dark'] .pagination {
-  background: #1a1a1a;
+  background: rgba(242, 182, 137, 0.05);
+  border-color: rgba(242, 182, 137, 0.1);
 }
 
 .pagination-btn {

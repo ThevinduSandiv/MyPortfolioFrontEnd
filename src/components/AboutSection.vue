@@ -1,83 +1,134 @@
+<!-- AboutSection.vue - Updated with API Integration -->
 <template>
   <section class="about-section">
-    <!-- Bio Section -->
-    <div class="bio-section">
-      <h1 class="bio-title">Hi, I'm Thevindu</h1>
-      <p class="bio-text">
-        I recently graduated with a Bachelor of Computing (Software Engineering) from Curtin University.
-        To broaden my technical perspective, I chose electives in Machine Learning and Machine Perception,
-        complementing my core proficiency in Python, Java, network security, and mobile development.
-        This has given me a practical introduction to AI concepts alongside a robust software engineering skill set.
-        I am eager to apply and expand these skills in a real-world context while also planning to pursue
-        further postgraduate studies to deepen my specialization in the field.
-      </p>
+    <!-- Loading State -->
+    <div v-if="loading" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Loading about information...</p>
     </div>
 
-    <!-- Skills Section -->
-    <div class="skills-container">
-      <div class="category-section">
-        <h2 class="category-title">Skills</h2>
-        <div class="title-line"></div>
-
-        <div class="skills-grid">
-          <div
-            v-for="(category, idx) in skillCategories"
-            :key="idx"
-            class="skill-category-card"
-            @click="openSkillPopup(category)"
-          >
-            <h3>{{ category.name }}</h3>
-            <div class="skill-preview">
-              <span v-for="(skill, i) in category.skills.slice(0, 2)" :key="i" class="skill-dot">●</span>
-              <span v-if="category.skills.length > 2" class="more-skills">+{{ category.skills.length - 2 }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Education Section -->
-      <div class="category-section">
-        <h2 class="category-title">Education</h2>
-        <div class="title-line"></div>
-
-        <div class="education-timeline">
-          <div v-for="edu in education" :key="edu.id" class="education-item">
-            <div class="edu-dot"></div>
-            <div class="edu-content">
-              <h3>{{ edu.degree }}</h3>
-              <p class="edu-school">{{ edu.school }}</p>
-              <p class="edu-date">{{ edu.year }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Certifications Section -->
-      <div class="category-section">
-        <h2 class="category-title">Certifications</h2>
-        <div class="title-line"></div>
-
-        <div class="cert-grid">
-          <div
-            v-for="cert in certifications"
-            :key="cert.id"
-            class="cert-card"
-            @click="openCertPopup(cert)"
-          >
-            <span class="cert-icon">🏆</span>
-            <h4>{{ cert.name }}</h4>
-            <p>{{ cert.issuer }}</p>
-          </div>
-        </div>
-      </div>
+    <!-- Error State - Full Page Error -->
+    <div v-else-if="error && !aboutData.bio" class="error-container">
+      <p class="error-message">{{ error }}</p>
+      <button @click="fetchAboutData" class="retry-button">Retry</button>
     </div>
+
+    <!-- Content -->
+    <template v-else>
+      <!-- Bio Section -->
+      <div class="bio-section">
+        <h1 class="bio-title">Hi, I'm Thevindu</h1>
+        <p class="bio-text">{{ aboutData.bio || defaultBio }}</p>
+      </div>
+
+      <!-- Skills Section -->
+      <div class="skills-container">
+        <div class="category-section">
+          <h2 class="category-title">Skills</h2>
+          <div class="title-line"></div>
+
+          <!-- Skills Error State -->
+          <div v-if="skillsError" class="section-error">
+            <p>{{ skillsError }}</p>
+            <button @click="fetchAboutData" class="retry-small">Retry</button>
+          </div>
+
+          <!-- Skills Content -->
+          <div v-else-if="aboutData.skillCategories && aboutData.skillCategories.length > 0" class="skills-grid">
+            <div
+              v-for="category in aboutData.skillCategories"
+              :key="category.name"
+              class="skill-category-card"
+              @click="openSkillPopup(category)"
+            >
+              <h3>{{ category.name }}</h3>
+              <div class="skill-preview">
+                <span 
+                  v-for="(skill, i) in category.skills.slice(0, 2)" 
+                  :key="i" 
+                  class="skill-dot"
+                >●</span>
+                <span v-if="category.skills.length > 2" class="more-skills">
+                  +{{ category.skills.length - 2 }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- No Skills Data -->
+          <div v-else class="no-data">
+            <p>No skills data available</p>
+          </div>
+        </div>
+
+        <!-- Education Section -->
+        <div class="category-section">
+          <h2 class="category-title">Education</h2>
+          <div class="title-line"></div>
+
+          <!-- Education Error State -->
+          <div v-if="educationError" class="section-error">
+            <p>{{ educationError }}</p>
+            <button @click="fetchAboutData" class="retry-small">Retry</button>
+          </div>
+
+          <!-- Education Content -->
+          <div v-else-if="aboutData.education && aboutData.education.length > 0" class="education-timeline">
+            <div v-for="edu in aboutData.education" :key="edu.education_id" class="education-item">
+              <div class="edu-dot"></div>
+              <div class="edu-content">
+                <h3>{{ edu.education_title }}</h3>
+                <p class="edu-school">{{ edu.institution_name }}</p>
+                <p class="edu-date">{{ formatEducationDate(edu) }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- No Education Data -->
+          <div v-else class="no-data">
+            <p>No education data available</p>
+          </div>
+        </div>
+
+        <!-- Certifications Section -->
+        <div class="category-section">
+          <h2 class="category-title">Certifications</h2>
+          <div class="title-line"></div>
+
+          <!-- Certifications Error State -->
+          <div v-if="certificationsError" class="section-error">
+            <p>{{ certificationsError }}</p>
+            <button @click="fetchAboutData" class="retry-small">Retry</button>
+          </div>
+
+          <!-- Certifications Content -->
+          <div v-else-if="aboutData.certifications && aboutData.certifications.length > 0" class="cert-grid">
+            <div
+              v-for="cert in aboutData.certifications"
+              :key="cert.achievement_id"
+              class="cert-card"
+              @click="openCertPopup(cert)"
+            >
+              <span class="cert-icon">🏆</span>
+              <h4>{{ cert.achievement_title }}</h4>
+              <p>{{ cert.achievement_description }}</p>
+            </div>
+          </div>
+
+          <!-- No Certifications Data -->
+          <div v-else class="no-data">
+            <p>No certifications available</p>
+          </div>
+        </div>
+      </div>
+    </template>
 
     <!-- Skill Detail Popup -->
     <transition name="modal">
       <SkillPopup
         v-if="selectedSkillCategory"
         :category="selectedSkillCategory"
-        @close="selectedSkillCategory = null"
+        @close="closeSkillPopup"
       />
     </transition>
 
@@ -86,75 +137,134 @@
       <CertPopup
         v-if="selectedCert"
         :cert="selectedCert"
-        @close="selectedCert = null"
+        @close="closeCertPopup"
       />
     </transition>
   </section>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import SkillPopup from './SkillPopup.vue';
 import CertPopup from './CertPopup.vue';
+import { api } from '@/services/api';
+
+// State
+const loading = ref(true);
+const error = ref(null);
+const skillsError = ref(null);
+const educationError = ref(null);
+const certificationsError = ref(null);
+
+const aboutData = ref({
+  bio: '',
+  skillCategories: [],
+  education: [],
+  certifications: []
+});
 
 const selectedSkillCategory = ref(null);
 const selectedCert = ref(null);
 
-const skillCategories = ref([
-  {
-    name: 'Programming Languages',
-    skills: ['Java', 'Python', 'C', 'C#', 'JavaScript']
-  },
-  {
-    name: 'Frameworks & Tools',
-    skills: ['Vue.js', '.NET', 'React', 'Tailwind CSS', 'PrimeVue']
-  },
-  {
-    name: 'Concepts',
-    skills: ['OOP', 'Design Patterns', 'REST APIs', 'Database Design', 'CI/CD']
-  },
-  {
-    name: 'Others',
-    skills: ['Git', 'Docker', 'Firebase', 'Linux', 'Agile']
-  }
-]);
+// Default bio as fallback only
+const defaultBio = 'I recently graduated with a Bachelor of Computing (Software Engineering) from Curtin University. To broaden my technical perspective, I chose electives in Machine Learning and Machine Perception, complementing my core proficiency in Python, Java, network security, and mobile development. This has given me a practical introduction to AI concepts alongside a robust software engineering skill set. I am eager to apply and expand these skills in a real-world context while also planning to pursue further postgraduate studies to deepen my specialization in the field.';
 
-const education = ref([
-  {
-    id: 1,
-    degree: 'Bachelor of Computing',
-    school: 'Curtin University',
-    year: '2023',
-    details: 'Software Engineering specialization with electives in Machine Learning and Machine Perception'
+// Format education date
+const formatEducationDate = (edu) => {
+  if (!edu.start_ts && !edu.end_ts) return '';
+  
+  const startYear = edu.start_ts ? new Date(edu.start_ts).getFullYear() : '';
+  const endYear = edu.end_ts ? new Date(edu.end_ts).getFullYear() : 'Present';
+  
+  if (startYear) {
+    return `${startYear} - ${endYear}`;
   }
-]);
+  return endYear;
+};
 
-const certifications = ref([
-  {
-    id: 1,
-    name: 'Cloud Computing',
-    issuer: 'AWS',
-    date: '2024',
-    description: 'Advanced cloud architecture and deployment'
-  },
-  {
-    id: 2,
-    name: 'Web Development',
-    issuer: 'Udemy',
-    date: '2023',
-    description: 'Full-stack web development with Vue and .NET'
+// Fetch about data from API
+const fetchAboutData = async () => {
+  loading.value = true;
+  error.value = null;
+  skillsError.value = null;
+  educationError.value = null;
+  certificationsError.value = null;
+  
+  try {
+    const response = await api.getAbout();
+    
+    // Set bio with fallback
+    aboutData.value.bio = response.bio || defaultBio;
+    
+    // Handle skills - show error if missing
+    if (response.skillCategories) {
+      aboutData.value.skillCategories = response.skillCategories;
+    } else {
+      skillsError.value = 'Unable to load skills data';
+      aboutData.value.skillCategories = [];
+    }
+    
+    // Handle education - show error if missing
+    if (response.education) {
+      aboutData.value.education = response.education;
+    } else {
+      educationError.value = 'Unable to load education data';
+      aboutData.value.education = [];
+    }
+    
+    // Handle certifications - show error if missing
+    if (response.certifications) {
+      aboutData.value.certifications = response.certifications;
+    } else {
+      certificationsError.value = 'Unable to load certifications data';
+      aboutData.value.certifications = [];
+    }
+    
+  } catch (err) {
+    console.error('Error fetching about data:', err);
+    error.value = err.message || 'Unable to load about information. Please try again later.';
+    
+    // Only keep bio fallback, clear other data
+    aboutData.value = {
+      bio: defaultBio,
+      skillCategories: [],
+      education: [],
+      certifications: []
+    };
+    
+    skillsError.value = 'Unable to load skills data';
+    educationError.value = 'Unable to load education data';
+    certificationsError.value = 'Unable to load certifications data';
+  } finally {
+    loading.value = false;
   }
-]);
+};
 
+// Popup handlers
 const openSkillPopup = (category) => {
   selectedSkillCategory.value = category;
   document.body.style.overflow = 'hidden';
+};
+
+const closeSkillPopup = () => {
+  selectedSkillCategory.value = null;
+  document.body.style.overflow = '';
 };
 
 const openCertPopup = (cert) => {
   selectedCert.value = cert;
   document.body.style.overflow = 'hidden';
 };
+
+const closeCertPopup = () => {
+  selectedCert.value = null;
+  document.body.style.overflow = '';
+};
+
+// Lifecycle
+onMounted(() => {
+  fetchAboutData();
+});
 </script>
 
 <style scoped>
@@ -175,6 +285,121 @@ const openCertPopup = (cert) => {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Loading State */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  gap: 1.5rem;
+  min-height: 400px;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e8ddd5;
+  border-top: 4px solid #ee9152;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-container p {
+  color: #8b7355;
+  font-size: 1.1rem;
+}
+
+[data-theme='dark'] .loading-container p {
+  color: #a08070;
+}
+
+/* Error State - Full Page */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  gap: 1.5rem;
+  min-height: 400px;
+  text-align: center;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 1.1rem;
+  max-width: 500px;
+}
+
+/* Section Error State */
+.section-error {
+  padding: 1.5rem;
+  background: rgba(220, 53, 69, 0.05);
+  border: 1px solid rgba(220, 53, 69, 0.2);
+  border-radius: 8px;
+  text-align: center;
+  color: #dc3545;
+}
+
+.section-error p {
+  margin: 0 0 0.75rem 0;
+}
+
+.retry-button,
+.retry-small {
+  background: #ee9152;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.retry-button {
+  padding: 0.8rem 2rem;
+  font-size: 1rem;
+}
+
+.retry-small {
+  padding: 0.4rem 1.2rem;
+  font-size: 0.85rem;
+}
+
+.retry-button:hover,
+.retry-small:hover {
+  background: #d47d44;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(238, 145, 82, 0.3);
+}
+
+.retry-button:active,
+.retry-small:active {
+  transform: translateY(0);
+}
+
+/* No Data State */
+.no-data {
+  padding: 2rem;
+  text-align: center;
+  color: #aaa;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  border: 1px dashed #ddd;
+}
+
+[data-theme='dark'] .no-data {
+  color: #666;
+  background: rgba(255, 255, 255, 0.02);
+  border-color: #333;
 }
 
 /* Bio Section */
