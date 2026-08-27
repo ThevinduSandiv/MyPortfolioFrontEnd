@@ -1,31 +1,18 @@
 <template>
-  <div class="modal-overlay" @click.self="$emit('close')">
-    <div class="modal-content">
-      <button class="modal-close" @click="$emit('close')">✕</button>
-
-      <div class="modal-header">
-        <h2>{{ achievement.title }}</h2>
-        <p class="date">{{ formatDate(achievement.date) }}</p>
+  <div class="popup-overlay" @click.self="$emit('close')">
+    <div class="popup-content">
+      <button class="close-btn" @click="$emit('close')">✕</button>
+      
+      <div class="popup-header">
+        <h2 class="popup-title">{{ achievement.achievement_title }}</h2>
+        <p class="achievement-date">{{ formatDate(achievement.earned_ts) }}</p>
       </div>
 
-      <div class="modal-body">
-        <p class="description">{{ achievement.description }}</p>
-
-        <div v-if="achievement.details" class="details-section">
-          <h3>Details</h3>
-          <p>{{ achievement.details }}</p>
-        </div>
-
-        <div v-if="achievement.images && achievement.images.length > 0" class="media-section">
-          <h3>Media</h3>
-          <div class="media-carousel">
-            <img v-for="(img, idx) in achievement.images"
-                 :key="idx"
-                 :src="img"
-                 :alt="`Achievement ${idx + 1}`"
-                 class="media-item"
-            />
-          </div>
+      <div class="popup-body">
+        <p class="achievement-description">{{ achievement.achievement_description }}</p>
+        
+        <div class="points-badge">
+          <span class="points-value">{{ achievement.achievement_points }} pts</span>
         </div>
       </div>
     </div>
@@ -34,10 +21,7 @@
 
 <script setup>
 defineProps({
-  achievement: {
-    type: Object,
-    required: true
-  }
+  achievement: Object
 });
 
 defineEmits(['close']);
@@ -52,46 +36,46 @@ const formatDate = (dateString) => {
 </script>
 
 <style scoped>
-.modal-overlay {
+.popup-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
-  padding: 1rem;
+  z-index: 1000;
   animation: fadeIn 0.3s ease;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-.modal-content {
+.popup-content {
+  position: relative;
   background: white;
   border-radius: 12px;
-  max-width: 500px;
-  width: 100%;
-  max-height: 85vh;
-  overflow-y: auto;
+  max-width: 450px;
+  width: 90%;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  position: relative;
   animation: slideUp 0.3s ease;
 }
 
-[data-theme='dark'] .modal-content {
+[data-theme='dark'] .popup-content {
   background: #1a1a1a;
-  color: #e0e0e0;
 }
 
 @keyframes slideUp {
   from {
-    transform: translateY(40px);
+    transform: translateY(30px);
     opacity: 0;
   }
   to {
@@ -100,126 +84,89 @@ const formatDate = (dateString) => {
   }
 }
 
-.modal-close {
+.close-btn {
   position: absolute;
   top: 1rem;
   right: 1rem;
-  background: none;
+  background: transparent;
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: #8b7355;
-  z-index: 101;
-  transition: all 0.2s ease;
+  color: #382e28;
+  z-index: 10;
+  transition: transform 0.2s ease;
 }
 
-[data-theme='dark'] .modal-close {
+[data-theme='dark'] .close-btn {
+  color: #f0e0d8;
+}
+
+.close-btn:hover {
+  transform: scale(1.2);
+}
+
+.popup-header {
+  padding: 2rem 2rem 1rem;
+  border-bottom: 2px solid #e8ddd5;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+}
+
+[data-theme='dark'] .popup-header {
+  border-bottom-color: #333;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.02) 100%);
+}
+
+.popup-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: #382e28;
+}
+
+[data-theme='dark'] .popup-title {
+  color: #f0e0d8;
+}
+
+.achievement-date {
+  font-size: 0.9rem;
+  color: #8b7355;
+  margin: 0;
+}
+
+[data-theme='dark'] .achievement-date {
   color: #d4b5a0;
 }
 
-.modal-close:hover {
-  transform: scale(1.2) rotate(90deg);
-}
-
-.modal-header {
+.popup-body {
   padding: 2rem;
-  border-bottom: 1px solid rgba(242, 182, 137, 0.2);
-}
-
-.modal-header h2 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.8rem;
-  color: #382e28;
-}
-
-[data-theme='dark'] .modal-header h2 {
-  color: #f0e0d8;
-}
-
-.date {
-  margin: 0;
-  font-size: 0.95rem;
-  color: #8b7355;
-  font-weight: 500;
-}
-
-[data-theme='dark'] .date {
-  color: #a08070;
-}
-
-.modal-body {
-  padding: 2rem;
-}
-
-.description {
-  font-size: 1.05rem;
-  line-height: 1.7;
-  color: #555;
-  margin: 0 0 1.5rem 0;
-}
-
-[data-theme='dark'] .description {
-  color: #b0b0b0;
-}
-
-.details-section,
-.media-section {
-  margin-top: 1.5rem;
-}
-
-.details-section h3,
-.media-section h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin: 0 0 1rem 0;
-  color: #382e28;
-}
-
-[data-theme='dark'] .details-section h3,
-[data-theme='dark'] .media-section h3 {
-  color: #f0e0d8;
-}
-
-.details-section p {
-  color: #666;
-  line-height: 1.6;
-  margin: 0;
-}
-
-[data-theme='dark'] .details-section p {
-  color: #b0b0b0;
-}
-
-.media-carousel {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-.media-item {
-  max-width: 100%;
-  height: auto;
+.achievement-description {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #666;
+  margin: 0;
+}
+
+[data-theme='dark'] .achievement-description {
+  color: #aaa;
+}
+
+.points-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   border-radius: 8px;
-  transition: transform 0.3s ease;
-  cursor: pointer;
+  color: white;
 }
 
-.media-item:hover {
-  transform: scale(1.05);
-}
-
-@media (max-width: 768px) {
-  .modal-content {
-    max-width: 95vw;
-  }
-
-  .modal-header,
-  .modal-body {
-    padding: 1.5rem 1rem;
-  }
-
-  .modal-header h2 {
-    font-size: 1.4rem;
-  }
+.points-value {
+  font-size: 1.3rem;
+  font-weight: 700;
 }
 </style>

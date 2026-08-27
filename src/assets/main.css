@@ -51,6 +51,28 @@ html {
   scroll-behavior: smooth;
 }
 
+:root[data-theme="light"] {
+  --bg-light: #fcf6ef;
+  --text-light: #2c2c2c;
+  --bg-light-soft: #f9e9d9;
+  --border-light: #d4ccc4;
+  --text-secondary: #8b7355;
+  --accent-primary: #ee9152;
+  --accent-secondary: #f2b689;
+  --dark-brown: #382e28;
+}
+
+:root[data-theme="dark"] {
+  --bg-light: #0f0f0f;
+  --text-light: #e0e0e0;
+  --bg-light-soft: #1a1a1a;
+  --border-light: #333;
+  --text-secondary: #d4b5a0;
+  --accent-primary: #f2b689;
+  --accent-secondary: #fcc8a8;
+  --dark-brown: #f0e0d8;
+}
+
 /* Focus styles for accessibility */
 :focus-visible {
   outline: 2px solid var(--accent-secondary);

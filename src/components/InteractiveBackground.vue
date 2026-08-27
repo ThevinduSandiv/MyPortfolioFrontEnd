@@ -1,153 +1,164 @@
 <template>
-  <div class="interactive-bg" ref="bgRef"></div>
+  <div class="interactive-bg" ref="bgContainer">
+    <!-- Wave/Liquid Background -->
+    <svg class="wave-bg" viewBox="0 0 1200 800" preserveAspectRatio="none">
+      <defs>
+        <filter id="blur">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="3" />
+        </filter>
+        <linearGradient id="waveGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" :style="{ stopColor: waveColor1, stopOpacity: 0.15 }" />
+          <stop offset="50%" :style="{ stopColor: waveColor2, stopOpacity: 0.08 }" />
+          <stop offset="100%" :style="{ stopColor: waveColor3, stopOpacity: 0.03 }" />
+        </linearGradient>
+      </defs>
+
+      <!-- Animated waves -->
+      <path :d="wave1Path" :style="{ fill: 'url(#waveGradient)', filter: 'url(#blur)' }" />
+      <path :d="wave2Path" :style="{ fill: 'url(#waveGradient)', filter: 'url(#blur)' }" />
+    </svg>
+
+    <!-- Geometric Elements -->
+    <div class="geometric-shapes">
+      <div
+        v-for="(shape, idx) in geometricShapes"
+        :key="idx"
+        class="shape"
+        :style="{
+          left: shape.x + '%',
+          top: shape.y + '%',
+          width: shape.size + 'px',
+          height: shape.size + 'px',
+          opacity: shape.opacity,
+          '--rotation': shape.rotation + 'deg',
+          '--delay': idx * 0.1 + 's'
+        }"
+        :class="shape.type"
+      />
+    </div>
+
+    <!-- Mouse Glow Effect -->
+    <div class="mouse-glow" :style="mouseGlowStyle" />
+
+    <!-- Animated Particles -->
+    <div class="particles">
+      <div
+        v-for="(particle, idx) in particles"
+        :key="idx"
+        class="particle"
+        :style="{
+          left: particle.x + 'px',
+          top: particle.y + 'px',
+          width: particle.size + 'px',
+          height: particle.size + 'px',
+          opacity: particle.opacity,
+          '--duration': particle.duration + 's',
+          '--delay': particle.delay + 's'
+        }"
+      />
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 
-const bgRef = ref(null);
-let canvas, ctx, animationId;
-let particles = [];
-let mouse = { x: 0, y: 0 };
-let isMoving = false;
+const bgContainer = ref(null);
+const mouseX = ref(0);
+const mouseY = ref(0);
+const time = ref(0);
+const waveTime = ref(0);
 
-const COLORS = {
-  light: {
-    wave: 'rgba(242, 182, 137, 0.15)',
-    particle: 'rgba(238, 145, 82, 0.2)',
-    line: 'rgba(238, 145, 82, 0.08)',
-  },
-  dark: {
-    wave: 'rgba(242, 182, 137, 0.1)',
-    particle: 'rgba(242, 182, 137, 0.15)',
-    line: 'rgba(242, 182, 137, 0.06)',
-  },
-};
+// Wave colors based on theme
+const waveColor1 = computed(() => {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  return isDark ? '#f2b689' : '#ee9152';
+});
 
-const getThemeColors = () => {
-  const theme = document.documentElement.getAttribute('data-theme') || 'light';
-  return COLORS[theme] || COLORS.light;
-};
+const waveColor2 = computed(() => {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  return isDark ? '#d4b5a0' : '#f2b689';
+});
 
-const initCanvas = () => {
-  canvas = bgRef.value;
-  ctx = canvas.getContext('2d');
-  resizeCanvas();
-  createParticles();
-  animate();
-  window.addEventListener('resize', resizeCanvas);
-};
+const waveColor3 = computed(() => '#382e28');
 
-const resizeCanvas = () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-};
-
-const createParticles = () => {
-  const count = Math.min(window.innerWidth / 15, 80);
-  particles = [];
-  for (let i = 0; i < count; i++) {
-    particles.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      vx: (Math.random() - 0.5) * 0.5,
-      vy: (Math.random() - 0.5) * 0.5,
-      size: Math.random() * 3 + 1,
-      opacity: Math.random() * 0.5 + 0.2,
-    });
+// Wave paths with animation
+const wave1Path = computed(() => {
+  const points = [];
+  for (let i = 0; i <= 1200; i += 50) {
+    const y = 400 + Math.sin((i / 1200) * Math.PI * 2 + waveTime.value * 0.005) * 40;
+    points.push(`${i},${y}`);
   }
-};
+  points.push('1200,800');
+  points.push('0,800');
+  return `M${points.join('L')}Z`;
+});
 
-const drawWave = () => {
-  const colors = getThemeColors();
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Draw fluid wave based on mouse position
-  const waveWidth = 200;
-  const waveHeight = 80;
-  const amplitude = 60;
-  const frequency = 0.01;
-
-  for (let y = 0; y < canvas.height; y += waveHeight) {
-    ctx.beginPath();
-    for (let x = 0; x <= canvas.width; x += 10) {
-      const offset = Math.sin(x * frequency + y * 0.01 + mouse.x * 0.01) * amplitude;
-      ctx.lineTo(x, y + offset);
-    }
-    ctx.strokeStyle = colors.wave;
-    ctx.lineWidth = 2;
-    ctx.stroke();
+const wave2Path = computed(() => {
+  const points = [];
+  for (let i = 0; i <= 1200; i += 50) {
+    const y = 450 + Math.sin((i / 1200) * Math.PI * 2 + waveTime.value * 0.003 + Math.PI) * 50;
+    points.push(`${i},${y}`);
   }
+  points.push('1200,800');
+  points.push('0,800');
+  return `M${points.join('L')}Z`;
+});
 
-  // Draw geometric grid with mouse influence
-  const gridSize = 80;
-  for (let x = 0; x < canvas.width; x += gridSize) {
-    for (let y = 0; y < canvas.height; y += gridSize) {
-      const distX = Math.abs(x - mouse.x);
-      const distY = Math.abs(y - mouse.y);
-      const dist = Math.sqrt(distX * distX + distY * distY);
-      const influence = Math.max(0, 1 - dist / 400);
-      const alpha = influence * 0.3;
-      ctx.strokeStyle = `rgba(238, 145, 82, ${alpha})`;
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(x + gridSize, y + gridSize);
-      ctx.moveTo(x + gridSize, y);
-      ctx.lineTo(x, y + gridSize);
-      ctx.stroke();
-    }
-  }
+// Geometric shapes
+const geometricShapes = ref([
+  { x: 10, y: 15, size: 120, type: 'circle', opacity: 0.05, rotation: 0 },
+  { x: 85, y: 70, size: 80, type: 'square', opacity: 0.04, rotation: 45 },
+  { x: 50, y: 10, size: 100, type: 'triangle', opacity: 0.03, rotation: 30 },
+  { x: 25, y: 60, size: 90, type: 'circle', opacity: 0.04, rotation: 0 },
+  { x: 70, y: 30, size: 110, type: 'square', opacity: 0.05, rotation: 20 }
+]);
 
-  // Draw particles that repel/attract to mouse
-  particles.forEach((p) => {
-    const dx = p.x - mouse.x;
-    const dy = p.y - mouse.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    if (distance < 150) {
-      const force = (150 - distance) / 150;
-      p.vx += (dx / distance) * force * 0.2;
-      p.vy += (dy / distance) * force * 0.2;
-    }
-    // Limit speed
-    const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-    if (speed > 1) {
-      p.vx *= 0.95;
-      p.vy *= 0.95;
-    }
-    p.x += p.vx;
-    p.y += p.vy;
+// Mouse glow effect
+const mouseGlowStyle = computed(() => ({
+  left: mouseX.value + 'px',
+  top: mouseY.value + 'px',
+  boxShadow: `0 0 80px 40px rgba(238, 145, 82, 0.15), 0 0 120px 60px rgba(242, 182, 137, 0.1)`
+}));
 
-    // Wrap around edges
-    if (p.x < 0) p.x = canvas.width;
-    if (p.x > canvas.width) p.x = 0;
-    if (p.y < 0) p.y = canvas.height;
-    if (p.y > canvas.height) p.y = 0;
+// Particles
+const particles = ref(generateParticles());
 
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-    ctx.fillStyle = colors.particle;
-    ctx.fill();
-  });
-};
+function generateParticles() {
+  return Array.from({ length: 20 }, () => ({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight,
+    size: Math.random() * 4 + 1,
+    opacity: Math.random() * 0.5 + 0.1,
+    duration: Math.random() * 20 + 15,
+    delay: Math.random() * 5
+  }));
+}
 
-const animate = () => {
-  drawWave();
-  animationId = requestAnimationFrame(animate);
-};
-
+// Mouse move handler
 const handleMouseMove = (e) => {
-  mouse.x = e.clientX;
-  mouse.y = e.clientY;
-  isMoving = true;
+  mouseX.value = e.clientX - 40;
+  mouseY.value = e.clientY - 40;
+};
+
+// Animation loop
+const animate = () => {
+  time.value += 1;
+  waveTime.value += 1;
+  requestAnimationFrame(animate);
 };
 
 onMounted(() => {
-  initCanvas();
   window.addEventListener('mousemove', handleMouseMove);
+  animate();
+
+  // Regenerate particles on resize
+  window.addEventListener('resize', () => {
+    particles.value = generateParticles();
+  });
 });
 
 onUnmounted(() => {
-  cancelAnimationFrame(animationId);
   window.removeEventListener('mousemove', handleMouseMove);
 });
 </script>
@@ -157,9 +168,123 @@ onUnmounted(() => {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+  background: var(--bg-light);
+  transition: background-color 0.5s ease;
+}
+
+.wave-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.geometric-shapes {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.shape {
+  position: absolute;
+  border: 1px solid rgba(238, 145, 82, 0.1);
+  animation: float 20s ease-in-out infinite;
+  animation-delay: var(--delay);
+  transform: rotate(var(--rotation));
+}
+
+[data-theme='dark'] .shape {
+  border-color: rgba(242, 182, 137, 0.1);
+}
+
+.shape.circle {
+  border-radius: 50%;
+}
+
+.shape.square {
+  border-radius: 8px;
+}
+
+.shape.triangle {
+  border: none;
+  width: 0 !important;
+  height: 0 !important;
+  border-left: calc(var(--size) / 2) solid transparent;
+  border-right: calc(var(--size) / 2) solid transparent;
+  border-bottom: var(--size) solid rgba(238, 145, 82, 0.08);
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate(var(--rotation));
+  }
+  50% {
+    transform: translateY(-30px) rotate(calc(var(--rotation) + 10deg));
+  }
+}
+
+.mouse-glow {
+  position: fixed;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
   pointer-events: none;
-  z-index: 0;
+  mix-blend-mode: screen;
+  transition: all 0.1s ease-out;
+  filter: blur(40px);
+}
+
+[data-theme='dark'] .mouse-glow {
+  mix-blend-mode: lighten;
+}
+
+.particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(238, 145, 82, 0.8), transparent);
+  animation: float-particle var(--duration) ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+[data-theme='dark'] .particle {
+  background: radial-gradient(circle, rgba(242, 182, 137, 0.6), transparent);
+}
+
+@keyframes float-particle {
+  0% {
+    transform: translateY(100vh) translateX(0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(100px) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Custom mouse cursor */
+::selection {
+  background: rgba(238, 145, 82, 0.3);
 }
 </style>

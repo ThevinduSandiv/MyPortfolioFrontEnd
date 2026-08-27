@@ -1,24 +1,18 @@
 <template>
-  <button class="theme-toggle" @click="toggleTheme" :title="isDark ? 'Light mode' : 'Dark mode'">
-    <span class="theme-icon" :class="{ rotating: isAnimating }">
-      {{ isDark ? '☀️' : '🌙' }}
-    </span>
-  </button>
+  <div class="theme-toggle" @click="toggleTheme">
+    <div class="toggle-switch" :class="{ active: isDark }">
+      <span class="toggle-icon">{{ isDark ? '🌙' : '☀️' }}</span>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 
-const isDark = ref(false);
-const isAnimating = ref(false);
 const emit = defineEmits(['theme-changed']);
+const isDark = ref(false);
 
 const toggleTheme = () => {
-  isAnimating.value = true;
-  setTimeout(() => {
-    isAnimating.value = false;
-  }, 500);
-
   isDark.value = !isDark.value;
   const theme = isDark.value ? 'dark' : 'light';
   document.documentElement.setAttribute('data-theme', theme);
@@ -27,61 +21,68 @@ const toggleTheme = () => {
 };
 
 onMounted(() => {
-  // Check localStorage first
   const savedTheme = localStorage.getItem('theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  
   if (savedTheme) {
     isDark.value = savedTheme === 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
   } else {
-    // Auto-detect system preference
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     isDark.value = prefersDark;
-    const theme = prefersDark ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', theme);
   }
+  
+  const theme = isDark.value ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', theme);
 });
 </script>
 
 <style scoped>
 .theme-toggle {
-  background: linear-gradient(135deg, #f2b689 0%, #ee9152 100%);
-  border: none;
-  border-radius: 50%;
-  width: 44px;
-  height: 44px;
+  display: flex;
+  align-items: center;
   cursor: pointer;
+}
+
+.toggle-switch {
+  width: 50px;
+  height: 28px;
+  background: #d4ccc4;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 2px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+[data-theme='dark'] .toggle-switch {
+  background: #333;
+}
+
+.toggle-switch.active {
+  justify-content: flex-end;
+  background: #382e28;
+}
+
+[data-theme='dark'] .toggle-switch.active {
+  background: #f0e0d8;
+}
+
+.toggle-icon {
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(242, 182, 137, 0.2);
-  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
 }
 
-.theme-toggle:hover {
-  transform: scale(1.08) rotate(10deg);
-  box-shadow: 0 4px 16px rgba(242, 182, 137, 0.35);
+.toggle-switch:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.theme-toggle:active {
-  transform: scale(0.95);
-}
-
-.theme-icon {
-  display: inline-block;
-  transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-.theme-icon.rotating {
-  transform: rotate(360deg);
-}
-
-@media (max-width: 768px) {
-  .theme-toggle {
-    width: 40px;
-    height: 40px;
-    font-size: 1rem;
-  }
+.toggle-switch.active .toggle-icon {
+  color: white;
 }
 </style>

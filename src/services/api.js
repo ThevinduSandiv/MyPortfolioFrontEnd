@@ -1,90 +1,132 @@
 // src/services/api.js
-
 const API_BASE_URL = 'http://localhost:5000/api';
 
-/**
- * Custom error class for user-friendly messages
- */
-class ApiError extends Error {
-  constructor(message, statusCode) {
-    super(message);
-    this.name = 'ApiError';
-    this.statusCode = statusCode;
+const handleError = (error) => {
+  if (error.response?.status === 405) {
+    return 'This feature is not available yet. Please try again later.';
   }
-}
-
-/**
- * Generic fetch wrapper
- * @param {string} endpoint - e.g., '/projects'
- * @param {Object} options - fetch options
- * @returns {Promise<any>} - parsed JSON data
- */
-const fetchData = async (endpoint, options = {}) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    });
-
-    if (!response.ok) {
-      // Handle specific status codes with friendly messages
-      let message;
-      switch (response.status) {
-        case 405:
-          message = 'This action is not allowed right now. Please try again later.';
-          break;
-        case 404:
-          message = 'The resource you are looking for could not be found.';
-          break;
-        case 500:
-          message = 'Something went wrong on our end. Please try again later.';
-          break;
-        default:
-          message = 'An unexpected error occurred. Please try again.';
-      }
-      throw new ApiError(message, response.status);
-    }
-
-    // If response is empty (e.g., for POST that returns nothing), return null
-    const text = await response.text();
-    return text ? JSON.parse(text) : null;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    // Network errors or CORS
-    throw new ApiError('Unable to connect to the server. Please check your internet connection.', 0);
+  if (error.response?.status === 404) {
+    return 'The requested resource was not found.';
   }
+  if (error.response?.status === 500) {
+    return 'Server error. Please try again later.';
+  }
+  if (error.response?.status === 503) {
+    return 'Service temporarily unavailable. Please try again later.';
+  }
+  return error.response?.data?.error || 'Something went wrong. Please try again.';
 };
 
-/**
- * API methods
- */
 export const api = {
-  // Contact
-  sendContactMessage: (data) => fetchData('/contact/send', { method: 'POST', body: JSON.stringify(data) }),
+  // Portfolio Endpoints
+  async getTagline() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/portfolio/tagline`);
+      if (!response.ok) throw { response };
+      return await response.json();
+    } catch (error) {
+      throw { message: handleError(error) };
+    }
+  },
 
-  // CV download
-  downloadCV: () => fetchData('/cv/generate', { method: 'POST' }),
+  // Projects Endpoints
+  async getFeaturedProjects(limit = 3) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/projects/featured?limit=${limit}`);
+      if (!response.ok) throw { response };
+      return await response.json();
+    } catch (error) {
+      throw { message: handleError(error) };
+    }
+  },
 
-  // Projects
-  getProjects: () => fetchData('/projects'),
+  async getProjects(params = {}) {
+    try {
+      const query = new URLSearchParams({
+        page: params.page || 1,
+        pageSize: params.pageSize || 10,
+        sort: params.sort || 'newest',
+        ...(params.search && { search: params.search }),
+        ...(params.technology && { technology: params.technology })
+      });
+      const response = await fetch(`${API_BASE_URL}/projects?${query}`);
+      if (!response.ok) throw { response };
+      return await response.json();
+    } catch (error) {
+      throw { message: handleError(error) };
+    }
+  },
 
-  // Experience
-  getExperience: () => fetchData('/experience'),
+  async getProject(id) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/projects/${id}`);
+      if (!response.ok) throw { response };
+      return await response.json();
+    } catch (error) {
+      throw { message: handleError(error) };
+    }
+  },
 
-  // Skills & Certifications
-  getSkills: () => fetchData('/skills'),
-  getCertifications: () => fetchData('/certifications'),
+  // About Endpoint
+  async getAbout() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/about`);
+      if (!response.ok) throw { response };
+      return await response.json();
+    } catch (error) {
+      throw { message: handleError(error) };
+    }
+  },
 
-  // Achievements
-  getAchievements: () => fetchData('/achievements'),
+  // Achievements Endpoint
+  async getAchievements(limit = 3) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/achievements/recent?limit=${limit}`);
+      if (!response.ok) throw { response };
+      return await response.json();
+    } catch (error) {
+      throw { message: handleError(error) };
+    }
+  },
 
-  // About / Bio
-  getBio: () => fetchData('/about'),
+  // Experience Endpoint
+  async getExperience(sort = 'newest') {
+    try {
+      const response = await fetch(`${API_BASE_URL}/experience?sort=${sort}`);
+      if (!response.ok) throw { response };
+      return await response.json();
+    } catch (error) {
+      throw { message: handleError(error) };
+    }
+  },
+
+  // Contact Endpoint
+  async sendContact(data) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/contact/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw { response };
+      return await response.json();
+    } catch (error) {
+      throw { message: handleError(error) };
+    }
+  },
+
+  // CV Generation
+  async generateCV(options = {}) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/cv/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(options)
+      });
+      if (!response.ok) throw { response };
+      return await response.blob();
+    } catch (error) {
+      throw { message: handleError(error) };
+    }
+  }
 };
-
-export default api;

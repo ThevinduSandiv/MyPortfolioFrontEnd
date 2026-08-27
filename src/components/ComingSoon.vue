@@ -1,157 +1,189 @@
 <template>
-  <div class="coming-soon">
-    <div class="content">
-      <div class="animated-title">
-        <h1>Coming Soon</h1>
-        <div class="underline"></div>
-      </div>
-      <p class="subtitle">Something fancy and cool is being built here...</p>
-
-      <div class="floating-elements">
-        <span class="element" style="--delay: 0s">✈️</span>
-        <span class="element" style="--delay: 0.5s">🛫</span>
-        <span class="element" style="--delay: 1s">🌍</span>
-        <span class="element" style="--delay: 1.5s">🚀</span>
+  <section class="coming-soon">
+    <div class="coming-soon-container">
+      <div class="content">
+        <h1 class="title">Coming Soon</h1>
+        <p class="subtitle">This page is under development</p>
+        <div class="animated-emoji">🚀</div>
+        <p class="message">Check back soon for exciting updates!</p>
       </div>
 
-      <div class="progress-bar">
-        <div class="progress-fill"></div>
-      </div>
-      <p class="progress-text">Working on this masterpiece...</p>
+      <!-- Floating elements animation -->
+      <div v-for="i in 5" :key="i" class="floating-shape" :style="{ '--delay': i * 0.2 + 's' }"></div>
     </div>
-  </div>
+  </section>
 </template>
 
 <script setup>
-// Coming soon page logic
 </script>
 
 <style scoped>
 .coming-soon {
   width: 100%;
-  min-height: 600px;
+  min-height: 60vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(242,182,137,0.1) 0%, rgba(238,145,82,0.05) 100%);
-  border-radius: 12px;
-  animation: fadeIn 0.6s;
+  padding: 2rem;
+  animation: fadeIn 0.6s ease-out;
 }
 
-@keyframes fadeIn { from { opacity: 0; } }
-
-[data-theme='dark'] .coming-soon {
-  background: linear-gradient(135deg, rgba(242,182,137,0.05) 0%, rgba(238,145,82,0.02) 100%);
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.content {
+.coming-soon-container {
+  position: relative;
   text-align: center;
   z-index: 1;
 }
 
-.animated-title {
-  margin-bottom: 1.5rem;
+.content {
+  position: relative;
+  z-index: 2;
 }
 
-.animated-title h1 {
-  font-size: 3.5rem;
+.title {
+  font-size: 3rem;
   font-weight: 700;
-  margin: 0;
+  margin: 0 0 0.5rem 0;
   color: #382e28;
-  animation: scaleIn 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  background: linear-gradient(135deg, #ee9152 0%, #f2b689 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-[data-theme='dark'] .animated-title h1 {
+[data-theme='dark'] .title {
   color: #f0e0d8;
+  -webkit-text-fill-color: unset;
+  background: unset;
 }
-
-@keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } }
-
-.underline {
-  height: 4px;
-  width: 200px;
-  margin: 1rem auto 0;
-  background: linear-gradient(90deg, #ee9152, #f2b689);
-  border-radius: 2px;
-  animation: slideIn 0.8s ease-out 0.2s both;
-}
-
-@keyframes slideIn { from { width: 0; } }
 
 .subtitle {
   font-size: 1.3rem;
   color: #8b7355;
-  margin: 1.5rem 0 2rem;
-  animation: fadeInUp 0.6s ease-out 0.3s both;
+  margin: 0 0 1.5rem 0;
 }
 
-@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } }
-
-[data-theme='dark'] .subtitle { color: #d4b5a0; }
-
-.floating-elements {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  margin: 2rem 0;
-  font-size: 2.5rem;
+[data-theme='dark'] .subtitle {
+  color: #d4b5a0;
 }
 
-.element {
+.animated-emoji {
+  font-size: 4rem;
+  margin: 1.5rem 0;
+  animation: bounce 2s ease-in-out infinite;
   display: inline-block;
-  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.message {
+  font-size: 1rem;
+  color: #666;
+  margin: 0;
+}
+
+[data-theme='dark'] .message {
+  color: #aaa;
+}
+
+/* Floating shapes */
+.floating-shape {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  border: 2px solid rgba(238, 145, 82, 0.2);
+  border-radius: 50%;
+  animation: float 8s ease-in-out infinite, rotate 20s linear infinite;
   animation-delay: var(--delay);
 }
 
+.floating-shape:nth-child(1) {
+  top: -20px;
+  left: -20px;
+  width: 80px;
+  height: 80px;
+}
+
+.floating-shape:nth-child(2) {
+  top: 50%;
+  right: -40px;
+  transform: translateY(-50%);
+  width: 120px;
+  height: 120px;
+}
+
+.floating-shape:nth-child(3) {
+  bottom: 50px;
+  left: 10%;
+  width: 60px;
+  height: 60px;
+}
+
+.floating-shape:nth-child(4) {
+  bottom: -30px;
+  right: 10%;
+  width: 90px;
+  height: 90px;
+}
+
+.floating-shape:nth-child(5) {
+  top: 30%;
+  left: 5%;
+  width: 70px;
+  height: 70px;
+}
+
 @keyframes float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-20px) rotate(5deg); }
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-30px);
+  }
 }
 
-.progress-bar {
-  width: 300px;
-  height: 8px;
-  background: rgba(238,145,82,0.2);
-  border-radius: 4px;
-  margin: 2rem auto;
-  overflow: hidden;
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #f2b689, #ee9152);
-  border-radius: 4px;
-  animation: progress 2s ease-in-out infinite;
-}
-
-@keyframes progress {
-  0% { width: 0%; }
-  50% { width: 70%; }
-  100% { width: 100%; }
-}
-
-.progress-text {
-  font-size: 0.9rem;
-  color: #8b7355;
-  margin: 1rem 0 0;
-  animation: fadeInUp 0.6s ease-out 0.5s both;
-}
-
-[data-theme='dark'] .progress-text { color: #a08070; }
-
+/* Responsive */
 @media (max-width: 768px) {
   .coming-soon {
-    min-height: 400px;
+    min-height: 50vh;
   }
-  .animated-title h1 {
-    font-size: 2.5rem;
+
+  .title {
+    font-size: 2rem;
   }
+
   .subtitle {
     font-size: 1rem;
   }
-  .floating-elements {
-    font-size: 1.8rem;
-    gap: 1rem;
+
+  .animated-emoji {
+    font-size: 3rem;
   }
 }
 </style>

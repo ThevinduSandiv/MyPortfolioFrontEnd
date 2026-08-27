@@ -1,8 +1,7 @@
 <template>
   <div class="app-container" :data-theme="currentTheme">
-    <!-- Interactive Background -->
     <InteractiveBackground />
-
+    
     <!-- Floating CV Download Button -->
     <div class="floating-cv-button" @click="downloadCV" title="Download CV">
       <div class="pulse-ring"></div>
@@ -53,11 +52,14 @@
 
     <!-- Main Content -->
     <main class="app-main">
-      <component :is="currentComponent" />
+      <component :is="currentComponent" :key="selectedPage.id" :toastRef="toastContainer" />
     </main>
 
     <!-- Footer -->
     <FooterSection />
+    
+    <!-- Toast Container -->
+    <ToastContainer ref="toastContainer" />
   </div>
 </template>
 
@@ -66,18 +68,19 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import ThemeToggle from '@/components/ThemeToggle.vue';
 import FooterSection from '@/components/FooterSection.vue';
 import InteractiveBackground from '@/components/InteractiveBackground.vue';
+import ToastContainer from '@/components/ToastContainer.vue';
 import HomeSection from '@/components/HomeSection.vue';
 import AboutSection from '@/components/AboutSection.vue';
 import ProjectsSection from '@/components/ProjectsSection.vue';
 import ExperienceSection from '@/components/ExperienceSection.vue';
 import ContactSection from '@/components/ContactSection.vue';
 import ComingSoon from '@/components/ComingSoon.vue';
-import api from '@/services/api';
 
 const currentTheme = ref('light');
 const selectedPage = ref({ id: 1, label: 'Home' });
 const mobileMenuOpen = ref(false);
 const isMobile = ref(false);
+const toastContainer = ref(null);
 
 const mainPages = [
   { id: 1, label: 'Home' },
@@ -106,34 +109,46 @@ const currentComponent = computed(() => {
 const selectPage = (page) => {
   selectedPage.value = page;
   mobileMenuOpen.value = false;
+  window.scrollTo(0, 0);
 };
 
 const checkScreenSize = () => {
   isMobile.value = window.innerWidth < 768;
 };
 
-const downloadCV = async () => {
-  try {
-    const blob = await api.downloadCV();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Thevindu_Hennayake_CV_${new Date().toISOString().split('T')[0]}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-  } catch (error) {
-    // Show friendly error
-    alert(error.message);
-  }
+const downloadCV = () => {
+  const cvData = {
+    timestamp: new Date().toISOString()
+  };
+  
+  fetch('/api/cv/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(cvData)
+  })
+    .then(response => response.blob())
+    .then(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Thevindu_Hennayake_CV_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toastContainer.value?.addToast('CV downloaded successfully!', 'success', 'Success');
+    })
+    .catch(error => {
+      console.error('CV download failed:', error);
+      toastContainer.value?.addToast('Failed to download CV. Please try again.', 'error', 'Error');
+    });
 };
 
 onMounted(() => {
   checkScreenSize();
   window.addEventListener('resize', checkScreenSize);
   
-  // Auto-detect system theme preference
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const savedTheme = localStorage.getItem('theme');
   if (savedTheme) {
@@ -150,14 +165,12 @@ onUnmounted(() => {
 
 <style scoped>
 .app-container {
-  position: relative;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: var(--bg-light);
   color: var(--text-light);
   transition: background-color 0.5s ease, color 0.5s ease;
-  z-index: 1;
 }
 
 .app-container[data-theme='dark'] {
@@ -172,12 +185,6 @@ onUnmounted(() => {
   --text-light: #2c2c2c;
   --bg-light-soft: #f9e9d9;
   --border-light: #d4ccc4;
-}
-
-/* Ensure header, nav, main, footer are above background */
-.app-header, .app-nav, .app-main, .footer {
-  position: relative;
-  z-index: 2;
 }
 
 /* Floating CV Button */

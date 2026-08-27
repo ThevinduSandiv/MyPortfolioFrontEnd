@@ -1,57 +1,33 @@
 <template>
-  <div class="modal-overlay" @click.self="$emit('close')">
-    <div class="modal-content">
-      <button class="modal-close" @click="$emit('close')">✕</button>
-
-      <div class="modal-header">
-        <h2>{{ project.name }}</h2>
+  <div class="popup-overlay" @click.self="$emit('close')">
+    <div class="popup-content">
+      <button class="close-btn" @click="$emit('close')">✕</button>
+      
+      <div class="popup-header">
+        <h2 class="popup-title">{{ project.project_title }}</h2>
       </div>
 
-      <!-- Images/Videos Carousel -->
-      <div v-if="project.images && project.images.length > 0" class="media-carousel">
-        <div class="media-container">
-          <img v-if="currentMediaIndex < project.images.length"
-               :src="project.images[currentMediaIndex]"
-               :alt="project.name"
-               class="media-item"
-          />
-        </div>
-        <div v-if="project.images.length > 1" class="carousel-controls">
-          <button @click="previousMedia" class="nav-btn">←</button>
-          <span class="media-counter">{{ currentMediaIndex + 1 }} / {{ project.images.length }}</span>
-          <button @click="nextMedia" class="nav-btn">→</button>
-        </div>
-      </div>
-      <div v-else class="media-placeholder">
-        📸 No images available
-      </div>
-
-      <!-- Project Details -->
-      <div class="modal-body">
-        <div class="section">
-          <h3>Description</h3>
-          <p>{{ project.description }}</p>
-        </div>
-
-        <div class="section">
-          <h3>Technologies Used</h3>
+      <div class="popup-body">
+        <p class="popup-description">{{ project.project_description }}</p>
+        
+        <div class="tech-stack">
+          <h4>Technologies:</h4>
           <div class="tech-list">
-            <span v-for="tech in project.technologies" :key="tech" class="tech-badge">
+            <span v-for="tech in JSON.parse(project.technologies || '[]')" :key="tech" class="tech-badge">
               {{ tech }}
             </span>
           </div>
         </div>
 
-        <div v-if="project.links && project.links.length > 0" class="section">
-          <h3>Links</h3>
-          <div class="links-list">
-            <a v-for="link in project.links" :key="link.url"
-               :href="link.url"
-               target="_blank"
-               class="link-btn">
-              {{ link.label }} →
-            </a>
-          </div>
+        <div v-if="project.github_link" class="links-section">
+          <a :href="project.github_link" target="_blank" rel="noopener" class="link-btn github">
+            🔗 GitHub Repository
+          </a>
+        </div>
+
+        <div class="points-badge">
+          <span class="points-label">Rating:</span>
+          <span class="points-value">{{ project.project_points }}/100</span>
         </div>
       </div>
     </div>
@@ -59,45 +35,25 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-
 defineProps({
-  project: {
-    type: Object,
-    required: true
-  }
+  project: Object
 });
 
 defineEmits(['close']);
-
-const currentMediaIndex = ref(0);
-
-const nextMedia = () => {
-  if (currentMediaIndex.value < currentMediaIndex.value.length - 1) {
-    currentMediaIndex.value++;
-  }
-};
-
-const previousMedia = () => {
-  if (currentMediaIndex.value > 0) {
-    currentMediaIndex.value--;
-  }
-};
 </script>
 
 <style scoped>
-.modal-overlay {
+.popup-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
-  padding: 1rem;
+  z-index: 1000;
   animation: fadeIn 0.3s ease;
 }
 
@@ -110,26 +66,25 @@ const previousMedia = () => {
   }
 }
 
-.modal-content {
-  background: var(--bg-modal, white);
+.popup-content {
+  position: relative;
+  background: white;
   border-radius: 12px;
-  max-width: 600px;
-  width: 100%;
-  max-height: 85vh;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
   overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  position: relative;
   animation: slideUp 0.3s ease;
 }
 
-[data-theme='dark'] .modal-content {
-  --bg-modal: #1a1a1a;
-  color: #e0e0e0;
+[data-theme='dark'] .popup-content {
+  background: #1a1a1a;
 }
 
 @keyframes slideUp {
   from {
-    transform: translateY(40px);
+    transform: translateY(30px);
     opacity: 0;
   }
   to {
@@ -138,151 +93,83 @@ const previousMedia = () => {
   }
 }
 
-.modal-close {
+.close-btn {
   position: absolute;
   top: 1rem;
   right: 1rem;
-  background: none;
+  background: transparent;
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: #8b7355;
-  z-index: 101;
-  transition: all 0.2s ease;
-}
-
-[data-theme='dark'] .modal-close {
-  color: #d4b5a0;
-}
-
-.modal-close:hover {
-  transform: scale(1.2) rotate(90deg);
-}
-
-.modal-header {
-  padding: 2rem 2rem 1rem;
-  border-bottom: 1px solid rgba(242, 182, 137, 0.2);
-}
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 1.8rem;
   color: #382e28;
+  z-index: 10;
+  transition: transform 0.2s ease;
 }
 
-[data-theme='dark'] .modal-header h2 {
+[data-theme='dark'] .close-btn {
   color: #f0e0d8;
 }
 
-.media-carousel {
-  padding: 1.5rem 2rem;
-  background: linear-gradient(135deg, rgba(242, 182, 137, 0.05), transparent);
+.close-btn:hover {
+  transform: scale(1.2);
 }
 
-.media-container {
-  width: 100%;
-  height: 300px;
-  background: #f0f0f0;
-  border-radius: 8px;
+.popup-header {
+  padding: 2rem 2rem 1rem;
+  border-bottom: 2px solid #e8ddd5;
+}
+
+[data-theme='dark'] .popup-header {
+  border-bottom-color: #333;
+}
+
+.popup-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  color: #382e28;
+}
+
+[data-theme='dark'] .popup-title {
+  color: #f0e0d8;
+}
+
+.popup-body {
+  padding: 2rem;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1rem;
-  overflow: hidden;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-[data-theme='dark'] .media-container {
+.popup-description {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #666;
+  margin: 0;
+}
+
+[data-theme='dark'] .popup-description {
+  color: #aaa;
+}
+
+.tech-stack {
+  background: #f9e9d9;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+[data-theme='dark'] .tech-stack {
   background: #242424;
 }
 
-.media-item {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  cursor: pointer;
-  transition: transform 0.3s ease;
-}
-
-.media-item:hover {
-  transform: scale(1.05);
-}
-
-.media-placeholder {
-  text-align: center;
-  color: #8b7355;
-  font-size: 2rem;
-  padding: 2rem;
-}
-
-[data-theme='dark'] .media-placeholder {
-  color: #a08070;
-}
-
-.carousel-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-}
-
-.nav-btn {
-  background: #f2b689;
-  border: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1.2rem;
-  transition: all 0.2s ease;
-}
-
-.nav-btn:hover {
-  background: #ee9152;
-  transform: translateY(-2px);
-}
-
-.media-counter {
-  font-size: 0.9rem;
-  color: #8b7355;
-  min-width: 80px;
-  text-align: center;
-}
-
-[data-theme='dark'] .media-counter {
-  color: #a08070;
-}
-
-.modal-body {
-  padding: 2rem;
-}
-
-.section {
-  margin-bottom: 2rem;
-}
-
-.section:last-child {
-  margin-bottom: 0;
-}
-
-.section h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin: 0 0 1rem 0;
+.tech-stack h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
   color: #382e28;
 }
 
-[data-theme='dark'] .section h3 {
+[data-theme='dark'] .tech-stack h4 {
   color: #f0e0d8;
-}
-
-.section p {
-  color: #666;
-  line-height: 1.6;
-  margin: 0;
-}
-
-[data-theme='dark'] .section p {
-  color: #b0b0b0;
 }
 
 .tech-list {
@@ -294,55 +181,51 @@ const previousMedia = () => {
 .tech-badge {
   display: inline-block;
   padding: 0.4rem 0.8rem;
-  background: rgba(238, 145, 82, 0.2);
-  border: 1px solid #ee9152;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #ee9152;
+  background: #ee9152;
+  color: white;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
-[data-theme='dark'] .tech-badge {
-  background: rgba(242, 182, 137, 0.15);
-  border-color: #f2b689;
-  color: #f2b689;
-}
-
-.links-list {
+.links-section {
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .link-btn {
-  display: inline-block;
-  padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, #f2b689 0%, #ee9152 100%);
+  padding: 0.75rem 1.5rem;
+  background: #ee9152;
   color: white;
   text-decoration: none;
-  border-radius: 6px;
-  font-weight: 500;
+  border-radius: 8px;
+  font-weight: 600;
   transition: all 0.3s ease;
-  text-align: center;
+  display: inline-block;
 }
 
 .link-btn:hover {
-  transform: translateX(4px);
-  box-shadow: 0 4px 12px rgba(238, 145, 82, 0.3);
+  background: #f2b689;
+  transform: translateY(-2px);
 }
 
-@media (max-width: 768px) {
-  .modal-content {
-    max-width: 95vw;
-  }
+.points-badge {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f2b689 0%, #ee9152 100%);
+  border-radius: 8px;
+  color: white;
+}
 
-  .modal-header,
-  .modal-body {
-    padding: 1.5rem 1rem;
-  }
+.points-label {
+  font-weight: 600;
+}
 
-  .media-container {
-    height: 200px;
-  }
+.points-value {
+  font-size: 1.2rem;
+  font-weight: 700;
 }
 </style>

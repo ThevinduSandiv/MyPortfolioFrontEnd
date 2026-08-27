@@ -3,7 +3,14 @@
     <!-- Bio Section -->
     <div class="bio-section">
       <h1 class="bio-title">Hi, I'm Thevindu</h1>
-      <p class="bio-text">{{ bioText }}</p>
+      <p class="bio-text">
+        I recently graduated with a Bachelor of Computing (Software Engineering) from Curtin University.
+        To broaden my technical perspective, I chose electives in Machine Learning and Machine Perception,
+        complementing my core proficiency in Python, Java, network security, and mobile development.
+        This has given me a practical introduction to AI concepts alongside a robust software engineering skill set.
+        I am eager to apply and expand these skills in a real-world context while also planning to pursue
+        further postgraduate studies to deepen my specialization in the field.
+      </p>
     </div>
 
     <!-- Skills Section -->
@@ -12,14 +19,7 @@
         <h2 class="category-title">Skills</h2>
         <div class="title-line"></div>
 
-        <div v-if="loadingSkills" class="loading-container">
-          <LoadingSpinner />
-        </div>
-        <div v-else-if="skillsError" class="error-state">
-          <p>{{ skillsError }}</p>
-          <button @click="loadSkills" class="retry-btn">Try Again</button>
-        </div>
-        <div v-else class="skills-grid">
+        <div class="skills-grid">
           <div
             v-for="(category, idx) in skillCategories"
             :key="idx"
@@ -40,14 +40,7 @@
         <h2 class="category-title">Education</h2>
         <div class="title-line"></div>
 
-        <div v-if="loadingEducation" class="loading-container">
-          <LoadingSpinner />
-        </div>
-        <div v-else-if="educationError" class="error-state">
-          <p>{{ educationError }}</p>
-          <button @click="loadEducation" class="retry-btn">Try Again</button>
-        </div>
-        <div v-else class="education-timeline">
+        <div class="education-timeline">
           <div v-for="edu in education" :key="edu.id" class="education-item">
             <div class="edu-dot"></div>
             <div class="edu-content">
@@ -64,14 +57,7 @@
         <h2 class="category-title">Certifications</h2>
         <div class="title-line"></div>
 
-        <div v-if="loadingCerts" class="loading-container">
-          <LoadingSpinner />
-        </div>
-        <div v-else-if="certsError" class="error-state">
-          <p>{{ certsError }}</p>
-          <button @click="loadCerts" class="retry-btn">Try Again</button>
-        </div>
-        <div v-else class="cert-grid">
+        <div class="cert-grid">
           <div
             v-for="cert in certifications"
             :key="cert.id"
@@ -107,63 +93,58 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import SkillPopup from './SkillPopup.vue';
 import CertPopup from './CertPopup.vue';
-import LoadingSpinner from './LoadingSpinner.vue';
-import api from '@/services/api';
-
-const bioText = ref('');
-const skillCategories = ref([]);
-const education = ref([]);
-const certifications = ref([]);
-
-const loadingSkills = ref(true);
-const loadingEducation = ref(true);
-const loadingCerts = ref(true);
-
-const skillsError = ref('');
-const educationError = ref('');
-const certsError = ref('');
 
 const selectedSkillCategory = ref(null);
 const selectedCert = ref(null);
 
-const loadSkills = async () => {
-  loadingSkills.value = true;
-  skillsError.value = '';
-  try {
-    skillCategories.value = await api.getSkills();
-  } catch (error) {
-    skillsError.value = error.message;
-  } finally {
-    loadingSkills.value = false;
+const skillCategories = ref([
+  {
+    name: 'Programming Languages',
+    skills: ['Java', 'Python', 'C', 'C#', 'JavaScript']
+  },
+  {
+    name: 'Frameworks & Tools',
+    skills: ['Vue.js', '.NET', 'React', 'Tailwind CSS', 'PrimeVue']
+  },
+  {
+    name: 'Concepts',
+    skills: ['OOP', 'Design Patterns', 'REST APIs', 'Database Design', 'CI/CD']
+  },
+  {
+    name: 'Others',
+    skills: ['Git', 'Docker', 'Firebase', 'Linux', 'Agile']
   }
-};
+]);
 
-const loadEducation = async () => {
-  loadingEducation.value = true;
-  educationError.value = '';
-  try {
-    education.value = await api.getBio(); // Or separate endpoint
-  } catch (error) {
-    educationError.value = error.message;
-  } finally {
-    loadingEducation.value = false;
+const education = ref([
+  {
+    id: 1,
+    degree: 'Bachelor of Computing',
+    school: 'Curtin University',
+    year: '2023',
+    details: 'Software Engineering specialization with electives in Machine Learning and Machine Perception'
   }
-};
+]);
 
-const loadCerts = async () => {
-  loadingCerts.value = true;
-  certsError.value = '';
-  try {
-    certifications.value = await api.getCertifications();
-  } catch (error) {
-    certsError.value = error.message;
-  } finally {
-    loadingCerts.value = false;
+const certifications = ref([
+  {
+    id: 1,
+    name: 'Cloud Computing',
+    issuer: 'AWS',
+    date: '2024',
+    description: 'Advanced cloud architecture and deployment'
+  },
+  {
+    id: 2,
+    name: 'Web Development',
+    issuer: 'Udemy',
+    date: '2023',
+    description: 'Full-stack web development with Vue and .NET'
   }
-};
+]);
 
 const openSkillPopup = (category) => {
   selectedSkillCategory.value = category;
@@ -174,37 +155,344 @@ const openCertPopup = (cert) => {
   selectedCert.value = cert;
   document.body.style.overflow = 'hidden';
 };
-
-onMounted(() => {
-  loadSkills();
-  loadEducation();
-  loadCerts();
-  // Fetch bio text
-  api.getBio().then(data => bioText.value = data.bio || '').catch(() => bioText.value = '');
-});
 </script>
 
 <style scoped>
-/* same as before plus loading/error styles */
-.loading-container {
+.about-section {
+  width: 100%;
   display: flex;
-  justify-content: center;
-  padding: 2rem;
+  flex-direction: column;
+  gap: 3rem;
+  animation: fadeIn 0.6s ease-out;
 }
 
-.error-state {
-  text-align: center;
-  padding: 2rem;
-  color: #ef4444;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.retry-btn {
-  padding: 0.75rem 2rem;
-  background: linear-gradient(135deg, #f2b689 0%, #ee9152 100%);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  margin-top: 1rem;
+/* Bio Section */
+.bio-section {
+  padding: 2rem;
+  background: linear-gradient(135deg, rgba(242, 182, 137, 0.1) 0%, rgba(238, 145, 82, 0.05) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(242, 182, 137, 0.2);
+}
+
+[data-theme='dark'] .bio-section {
+  background: linear-gradient(135deg, rgba(242, 182, 137, 0.05) 0%, rgba(238, 145, 82, 0.02) 100%);
+  border-color: rgba(242, 182, 137, 0.1);
+}
+
+.bio-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+  color: #382e28;
+}
+
+[data-theme='dark'] .bio-title {
+  color: #f0e0d8;
+}
+
+.bio-text {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #555;
+  margin: 0;
+}
+
+[data-theme='dark'] .bio-text {
+  color: #b0b0b0;
+}
+
+/* Skills Container */
+.skills-container {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.category-section {
+  width: 100%;
+}
+
+.category-title {
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  color: #382e28;
+}
+
+[data-theme='dark'] .category-title {
+  color: #f0e0d8;
+}
+
+.title-line {
+  height: 3px;
+  width: 100%;
+  background: linear-gradient(90deg, #ee9152 0%, rgba(238, 145, 82, 0) 100%);
+  border-radius: 2px;
+  margin-bottom: 1.5rem;
+}
+
+/* Skills Grid */
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+}
+
+.skill-category-card {
+  background: linear-gradient(135deg, #ffffff 0%, #faf8f5 100%);
+  border: 1px solid #e8ddd5;
+  border-radius: 12px;
+  padding: 1.5rem;
   cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+[data-theme='dark'] .skill-category-card {
+  background: linear-gradient(135deg, #1a1a1a 0%, #242424 100%);
+  border-color: #333;
+}
+
+.skill-category-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  border-color: #f2b689;
+}
+
+[data-theme='dark'] .skill-category-card:hover {
+  box-shadow: 0 12px 32px rgba(242, 182, 137, 0.15);
+}
+
+.skill-category-card h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: #382e28;
+}
+
+[data-theme='dark'] .skill-category-card h3 {
+  color: #f0e0d8;
+}
+
+.skill-preview {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 1.2rem;
+  color: #ee9152;
+}
+
+.more-skills {
+  font-size: 0.85rem;
+  background: rgba(238, 145, 82, 0.2);
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+}
+
+/* Education Timeline */
+.education-timeline {
+  position: relative;
+  padding-left: 30px;
+}
+
+.education-timeline::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, #ee9152 0%, rgba(238, 145, 82, 0) 100%);
+}
+
+.education-item {
+  position: relative;
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 1.5rem;
+}
+
+.education-item:last-child {
+  margin-bottom: 0;
+}
+
+.edu-dot {
+  position: absolute;
+  left: -32px;
+  top: 6px;
+  width: 12px;
+  height: 12px;
+  background: #ee9152;
+  border: 3px solid white;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+[data-theme='dark'] .edu-dot {
+  border-color: #0f0f0f;
+}
+
+.edu-content {
+  flex: 1;
+}
+
+.edu-content h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 0.3rem 0;
+  color: #382e28;
+}
+
+[data-theme='dark'] .edu-content h3 {
+  color: #f0e0d8;
+}
+
+.edu-school {
+  font-size: 0.95rem;
+  color: #8b7355;
+  margin: 0 0 0.2rem 0;
+  font-weight: 500;
+}
+
+[data-theme='dark'] .edu-school {
+  color: #d4b5a0;
+}
+
+.edu-date {
+  font-size: 0.9rem;
+  color: #aaa;
+  margin: 0;
+}
+
+[data-theme='dark'] .edu-date {
+  color: #808080;
+}
+
+/* Certifications Grid */
+.cert-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.25rem;
+}
+
+.cert-card {
+  background: linear-gradient(135deg, #ffffff 0%, #faf8f5 100%);
+  border: 1px solid #e8ddd5;
+  border-radius: 12px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+[data-theme='dark'] .cert-card {
+  background: linear-gradient(135deg, #1a1a1a 0%, #242424 100%);
+  border-color: #333;
+}
+
+.cert-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 32px rgba(242, 182, 137, 0.2);
+  border-color: #f2b689;
+}
+
+.cert-icon {
+  font-size: 2rem;
+}
+
+.cert-card h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+  color: #382e28;
+}
+
+[data-theme='dark'] .cert-card h4 {
+  color: #f0e0d8;
+}
+
+.cert-card p {
+  font-size: 0.85rem;
+  color: #8b7355;
+  margin: 0;
+}
+
+[data-theme='dark'] .cert-card p {
+  color: #a08070;
+}
+
+/* Modal Transitions */
+.modal-enter-active,
+.modal-leave-active {
+  transition: all 0.3s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .about-section {
+    gap: 2rem;
+  }
+
+  .bio-section {
+    padding: 1.5rem;
+  }
+
+  .bio-title {
+    font-size: 1.6rem;
+  }
+
+  .bio-text {
+    font-size: 0.95rem;
+  }
+
+  .category-title {
+    font-size: 1.3rem;
+  }
+
+  .skills-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+
+  .cert-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .education-timeline {
+    padding-left: 25px;
+  }
+
+  .education-timeline::before {
+    left: 2px;
+  }
+
+  .edu-dot {
+    left: -29px;
+  }
 }
 </style>
