@@ -1,5 +1,6 @@
 // src/services/api.js
 const API_BASE_URL = 'http://localhost:5000/api';
+const FRESH_CONTENT_OPTIONS = { cache: 'no-store' };
 
 const handleError = (error) => {
   if (error.response?.status === 405) {
@@ -32,7 +33,10 @@ export const api = {
   // Projects Endpoints
   async getFeaturedProjects(limit = 3) {
     try {
-      const response = await fetch(`${API_BASE_URL}/projects/featured?limit=${limit}`);
+      const response = await fetch(
+        `${API_BASE_URL}/projects/featured?limit=${limit}`,
+        FRESH_CONTENT_OPTIONS
+      );
       if (!response.ok) throw { response };
       return await response.json();
     } catch (error) {
@@ -49,7 +53,7 @@ export const api = {
         ...(params.search && { search: params.search }),
         ...(params.technology && { technology: params.technology })
       });
-      const response = await fetch(`${API_BASE_URL}/projects?${query}`);
+      const response = await fetch(`${API_BASE_URL}/projects?${query}`, FRESH_CONTENT_OPTIONS);
       if (!response.ok) throw { response };
       return await response.json();
     } catch (error) {
@@ -59,7 +63,7 @@ export const api = {
 
   async getProject(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/projects/${id}`);
+      const response = await fetch(`${API_BASE_URL}/projects/${id}`, FRESH_CONTENT_OPTIONS);
       if (!response.ok) throw { response };
       return await response.json();
     } catch (error) {
@@ -70,7 +74,7 @@ export const api = {
   // About Endpoint
   async getAbout() {
     try {
-      const response = await fetch(`${API_BASE_URL}/about`);
+      const response = await fetch(`${API_BASE_URL}/about`, FRESH_CONTENT_OPTIONS);
       if (!response.ok) throw { response };
       return await response.json();
     } catch (error) {
@@ -81,7 +85,10 @@ export const api = {
   // Achievements Endpoint
   async getAchievements(limit = 3) {
     try {
-      const response = await fetch(`${API_BASE_URL}/achievements/recent?limit=${limit}`);
+      const response = await fetch(
+        `${API_BASE_URL}/achievements/recent?limit=${limit}`,
+        FRESH_CONTENT_OPTIONS
+      );
       if (!response.ok) throw { response };
       return await response.json();
     } catch (error) {
@@ -92,7 +99,7 @@ export const api = {
   // Experience Endpoint
   async getExperience(sort = 'newest') {
     try {
-      const response = await fetch(`${API_BASE_URL}/experience?sort=${sort}`);
+      const response = await fetch(`${API_BASE_URL}/experience?sort=${sort}`, FRESH_CONTENT_OPTIONS);
       if (!response.ok) throw { response };
       return await response.json();
     } catch (error) {
