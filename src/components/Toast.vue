@@ -6,15 +6,15 @@
         <p class="toast-title">{{ title }}</p>
         <p class="toast-message">{{ message }}</p>
       </div>
-      <button class="toast-close" @click="emit('close')">✕</button>
+      <button class="toast-close" aria-label="Close notification" @click="emit('close')">&times;</button>
     </div>
   </transition>
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from 'vue';
+import { computed } from 'vue';
 
-defineProps({
+const props = defineProps({
   visible: Boolean,
   type: {
     type: String,
@@ -28,18 +28,15 @@ const emit = defineEmits(['close']);
 
 const icon = computed(() => {
   const icons = {
-    error: '❌',
-    success: '✅',
-    info: 'ℹ️',
-    warning: '⚠️'
+    error: '!',
+    success: '✓',
+    info: 'i',
+    warning: '!'
   };
-  return icons[type] || '❌';
+  return icons[props.type] || '!';
 });
 </script>
 
-<script>
-import { computed } from 'vue';
-</script>
 
 <style scoped>
 .toast {

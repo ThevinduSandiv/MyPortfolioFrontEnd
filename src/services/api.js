@@ -18,6 +18,23 @@ const handleError = (error) => {
   return error.response?.data?.error || 'Something went wrong. Please try again.';
 };
 
+const requestJson = async (url, options = {}) => {
+  const response = await fetch(url, options);
+  if (response.ok) return response.json();
+
+  let responseError = '';
+  try {
+    const payload = await response.json();
+    responseError = payload?.error || payload?.message || '';
+  } catch (_) {
+    // Use the shared status-based fallback when the API has no JSON error body.
+  }
+
+  const error = new Error(responseError || handleError({ response }));
+  error.status = response.status;
+  throw error;
+};
+
 export const api = {
   // Portfolio Endpoints
   async getTagline() {
@@ -104,6 +121,52 @@ export const api = {
       return await response.json();
     } catch (error) {
       throw { message: handleError(error) };
+    }
+  },
+
+  // Aviation Adventure Endpoints
+  async getAviationPosts(params = {}, signal) {
+    const query = new URLSearchParams({
+      page: params.page || 1,
+      pageSize: params.pageSize || 12
+    });
+
+    if (params.postType) query.set('postType', params.postType);
+    if (typeof params.featured === 'boolean') query.set('featured', String(params.featured));
+    if (params.tag) query.set('tag', params.tag);
+
+    try {
+      return await requestJson(`${API_BASE_URL}/AviationPosts?${query}`, {
+        ...FRESH_CONTENT_OPTIONS,
+        signal
+      });
+    } catch (error) {
+      if (error?.name === 'AbortError') throw error;
+      throw { message: error?.message || handleError(error), status: error?.status };
+    }
+  },
+
+  async getAviationPostById(id, signal) {
+    try {
+      return await requestJson(
+        `${API_BASE_URL}/AviationPosts/${encodeURIComponent(id)}`,
+        { ...FRESH_CONTENT_OPTIONS, signal }
+      );
+    } catch (error) {
+      if (error?.name === 'AbortError') throw error;
+      throw { message: error?.message || handleError(error), status: error?.status };
+    }
+  },
+
+  async getAviationPostBySlug(slug, signal) {
+    try {
+      return await requestJson(
+        `${API_BASE_URL}/AviationPosts/slug/${encodeURIComponent(slug)}`,
+        { ...FRESH_CONTENT_OPTIONS, signal }
+      );
+    } catch (error) {
+      if (error?.name === 'AbortError') throw error;
+      throw { message: error?.message || handleError(error), status: error?.status };
     }
   },
 

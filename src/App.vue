@@ -98,6 +98,7 @@ import AboutSection from '@/components/AboutSection.vue';
 import ProjectsSection from '@/components/ProjectsSection.vue';
 import ExperienceSection from '@/components/ExperienceSection.vue';
 import ContactSection from '@/components/ContactSection.vue';
+import AviationSection from '@/components/AviationSection.vue';
 import ComingSoon from '@/components/ComingSoon.vue';
 
 const currentTheme = ref('light');
@@ -125,7 +126,7 @@ const currentComponent = computed(() => {
     case 3: return ProjectsSection;
     case 4: return ExperienceSection;
     case 5: return ContactSection;
-    case 6: return ComingSoon;
+    case 6: return AviationSection;
     default: return ComingSoon;
   }
 });
