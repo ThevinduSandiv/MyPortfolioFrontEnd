@@ -1,7 +1,6 @@
 // src/services/api.js
-const API_BASE_URL = 'http://localhost:5000/api';
-const FRESH_CONTENT_OPTIONS = { cache: 'no-store' };
 const API_BASE_URL = 'https://portfoliobackendtest.onrender.com/api';
+const FRESH_CONTENT_OPTIONS = { cache: 'no-store' };
 
 const handleError = (error) => {
   if (error.response?.status === 405) {
