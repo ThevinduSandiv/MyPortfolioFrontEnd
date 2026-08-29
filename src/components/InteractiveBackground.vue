@@ -38,7 +38,11 @@
     </div>
 
     <!-- Mouse Glow Effect -->
-    <div class="mouse-glow" :style="mouseGlowStyle" />
+    <div
+      class="mouse-glow"
+      :class="{ visible: hasPointer }"
+      :style="mouseGlowStyle"
+    />
 
     <!-- Animated Particles -->
     <div class="particles">
@@ -66,8 +70,15 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 const bgContainer = ref(null);
 const mouseX = ref(0);
 const mouseY = ref(0);
-const time = ref(0);
+const hasPointer = ref(false);
+const prefersReducedMotion = ref(false);
 const waveTime = ref(0);
+
+let targetMouseX = 0;
+let targetMouseY = 0;
+let animationFrameId;
+let previousFrameTime = 0;
+let motionQuery;
 
 // Wave colors based on theme
 const waveColor1 = computed(() => {
@@ -116,8 +127,7 @@ const geometricShapes = ref([
 
 // Mouse glow effect
 const mouseGlowStyle = computed(() => ({
-  left: mouseX.value + 'px',
-  top: mouseY.value + 'px',
+  transform: `translate3d(${mouseX.value}px, ${mouseY.value}px, 0)`,
   boxShadow: `0 0 80px 40px rgba(238, 145, 82, 0.15), 0 0 120px 60px rgba(242, 182, 137, 0.1)`
 }));
 
@@ -135,31 +145,72 @@ function generateParticles() {
   }));
 }
 
-// Mouse move handler
-const handleMouseMove = (e) => {
-  mouseX.value = e.clientX - 40;
-  mouseY.value = e.clientY - 40;
+// Pointer tracking
+const handlePointerMove = (event) => {
+  if (event.pointerType === 'touch') return;
+
+  targetMouseX = event.clientX - 40;
+  targetMouseY = event.clientY - 40;
+
+  // Place the glow at the pointer immediately when it first appears. Smoothing
+  // only applies to subsequent movement, so it never travels from the corner.
+  if (!hasPointer.value) {
+    mouseX.value = targetMouseX;
+    mouseY.value = targetMouseY;
+    hasPointer.value = true;
+  }
+};
+
+const handlePointerOut = (event) => {
+  if (!event.relatedTarget) hasPointer.value = false;
+};
+
+const handleResize = () => {
+  particles.value = generateParticles();
+};
+
+const handleMotionPreference = (event) => {
+  prefersReducedMotion.value = event.matches;
 };
 
 // Animation loop
-const animate = () => {
-  time.value += 1;
+const animate = (frameTime) => {
+  const elapsed = previousFrameTime
+    ? Math.min(frameTime - previousFrameTime, 50)
+    : 16;
+  previousFrameTime = frameTime;
+
   waveTime.value += 1;
-  requestAnimationFrame(animate);
+
+  if (hasPointer.value) {
+    // This produces a subtle trail with consistent timing across refresh rates.
+    const smoothing = prefersReducedMotion.value
+      ? 1
+      : 1 - Math.exp(-elapsed / 35);
+    mouseX.value += (targetMouseX - mouseX.value) * smoothing;
+    mouseY.value += (targetMouseY - mouseY.value) * smoothing;
+  }
+
+  animationFrameId = requestAnimationFrame(animate);
 };
 
 onMounted(() => {
-  window.addEventListener('mousemove', handleMouseMove);
-  animate();
+  motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  prefersReducedMotion.value = motionQuery.matches;
+  motionQuery.addEventListener?.('change', handleMotionPreference);
 
-  // Regenerate particles on resize
-  window.addEventListener('resize', () => {
-    particles.value = generateParticles();
-  });
+  window.addEventListener('pointermove', handlePointerMove, { passive: true });
+  window.addEventListener('pointerout', handlePointerOut, { passive: true });
+  window.addEventListener('resize', handleResize);
+  animationFrameId = requestAnimationFrame(animate);
 });
 
 onUnmounted(() => {
-  window.removeEventListener('mousemove', handleMouseMove);
+  cancelAnimationFrame(animationFrameId);
+  motionQuery?.removeEventListener?.('change', handleMotionPreference);
+  window.removeEventListener('pointermove', handlePointerMove);
+  window.removeEventListener('pointerout', handlePointerOut);
+  window.removeEventListener('resize', handleResize);
 });
 </script>
 
@@ -233,17 +284,31 @@ onUnmounted(() => {
 
 .mouse-glow {
   position: fixed;
+  top: 0;
+  left: 0;
   width: 80px;
   height: 80px;
   border-radius: 50%;
   pointer-events: none;
   mix-blend-mode: screen;
-  transition: all 0.1s ease-out;
+  opacity: 0;
+  transition: opacity 0.18s ease-out;
   filter: blur(40px);
+  will-change: transform, opacity;
+}
+
+.mouse-glow.visible {
+  opacity: 1;
 }
 
 [data-theme='dark'] .mouse-glow {
   mix-blend-mode: lighten;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .mouse-glow {
+    display: none;
+  }
 }
 
 .particles {
