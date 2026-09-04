@@ -81,6 +81,7 @@
           v-for="post in posts"
           :key="post.post_id"
           :post="post"
+          :suspend-video="Boolean(selectedPost)"
           @open="openPost"
           @media-error="refreshMedia"
         />

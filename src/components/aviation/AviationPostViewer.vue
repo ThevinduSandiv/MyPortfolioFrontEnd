@@ -18,18 +18,27 @@
           <template v-if="activeMedia && !failedMedia.has(activeMedia.media_id)">
             <img
               v-if="activeMedia.media_type === 'image'"
+              :key="activeMedia.media_id"
               :src="activeMedia.url"
               :alt="`${postData.title}, media ${activeIndex + 1}`"
               @error="handleMediaError(activeMedia)"
             />
             <video
               v-else-if="activeMedia.media_type === 'video'"
+              :key="activeMedia.media_id"
               ref="videoRef"
               :src="activeMedia.url"
               controls
               playsinline
-              preload="metadata"
-              @error="handleMediaError(activeMedia)"
+              preload="auto"
+              @loadstart="markVideoBuffering"
+              @waiting="markVideoBuffering"
+              @stalled="markVideoBuffering"
+              @canplay="markVideoReady"
+              @playing="handleVideoPlaying"
+              @pause="handleVideoPause"
+              @ended="handleVideoPause"
+              @error="handleVideoError(activeMedia)"
             ></video>
             <a
               v-else
@@ -44,6 +53,15 @@
               <path d="M8 36 56 20 38 40l-4 16-7-13-13 5 3-8-9-4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
             </svg>
             <span>{{ activeMedia ? 'Media unavailable' : 'No media for this post' }}</span>
+          </div>
+
+          <div
+            v-if="activeMedia?.media_type === 'video' && videoBuffering && !failedMedia.has(activeMedia.media_id)"
+            class="video-buffering"
+            role="status"
+          >
+            <span aria-hidden="true"></span>
+            Buffering video...
           </div>
 
           <template v-if="safeMedia.length > 1">
@@ -132,10 +150,13 @@ const activeIndex = ref(0);
 const failedMedia = ref(new Set());
 const detailLoading = ref(true);
 const detailError = ref('');
+const videoBuffering = ref(true);
 const refreshAttempts = new Set();
 let detailController = null;
 let previousBodyOverflow = '';
 let previouslyFocused = null;
+let viewerClosing = false;
+const playbackSource = `aviation-viewer-${props.post.post_id}`;
 
 const safeMedia = computed(() => Array.isArray(postData.value.media) ? postData.value.media : []);
 const activeMedia = computed(() => safeMedia.value[activeIndex.value] || null);
@@ -152,9 +173,47 @@ const formattedDate = computed(() => {
 
 const pauseVideo = () => videoRef.value?.pause?.();
 
+const releaseVideo = () => {
+  const video = videoRef.value;
+  if (!video) return;
+  video.pause?.();
+  video.removeAttribute('src');
+  video.load?.();
+};
+
+const markVideoBuffering = () => {
+  videoBuffering.value = true;
+};
+
+const markVideoReady = () => {
+  videoBuffering.value = false;
+};
+
+const setBackgroundPlaybackState = (active) => {
+  window.dispatchEvent(new CustomEvent('portfolio-media-playback', {
+    detail: { active, source: playbackSource }
+  }));
+};
+
+const handleVideoPlaying = () => {
+  markVideoReady();
+  setBackgroundPlaybackState(true);
+};
+
+const handleVideoPause = () => {
+  setBackgroundPlaybackState(false);
+};
+
+const handleVideoError = (media) => {
+  setBackgroundPlaybackState(false);
+  handleMediaError(media);
+};
+
 const selectMedia = (index) => {
+  setBackgroundPlaybackState(false);
   pauseVideo();
   activeIndex.value = index;
+  videoBuffering.value = safeMedia.value[index]?.media_type === 'video';
 };
 
 const showPrevious = () => selectMedia((activeIndex.value - 1 + safeMedia.value.length) % safeMedia.value.length);
@@ -163,6 +222,23 @@ const showNext = () => selectMedia((activeIndex.value + 1) % safeMedia.value.len
 const detailErrorMessage = (error) => error?.status === 404
   ? 'This aviation post is no longer available.'
   : error?.message || 'The full post could not be loaded.';
+
+const mergeDetailWithoutResettingMedia = (detail) => {
+  const normalizedDetail = normalizePost(detail);
+  const currentMediaById = new Map(
+    safeMedia.value.map((media) => [media.media_id, media])
+  );
+
+  return {
+    ...normalizedDetail,
+    media: normalizedDetail.media.map((media) => {
+      const currentMedia = currentMediaById.get(media.media_id);
+      return currentMedia?.url
+        ? { ...media, url: currentMedia.url }
+        : media;
+    })
+  };
+};
 
 const loadDetail = async () => {
   if (!postData.value.post_id) return;
@@ -173,7 +249,9 @@ const loadDetail = async () => {
   detailError.value = '';
 
   try {
-    const detail = normalizePost(await api.getAviationPostById(postData.value.post_id, controller.signal));
+    const detail = mergeDetailWithoutResettingMedia(
+      await api.getAviationPostById(postData.value.post_id, controller.signal)
+    );
     if (controller.signal.aborted) return;
     postData.value = detail;
     activeIndex.value = Math.min(activeIndex.value, Math.max(0, detail.media.length - 1));
@@ -191,7 +269,8 @@ const loadDetail = async () => {
 };
 
 const handleMediaError = async (media) => {
-  if (!media?.media_id) return;
+  if (viewerClosing || !media?.media_id) return;
+  videoBuffering.value = false;
   if (refreshAttempts.has(media.media_id)) {
     failedMedia.value = new Set([...failedMedia.value, media.media_id]);
     return;
@@ -221,7 +300,9 @@ const handleMediaError = async (media) => {
 };
 
 const closeViewer = () => {
-  pauseVideo();
+  viewerClosing = true;
+  setBackgroundPlaybackState(false);
+  releaseVideo();
   emit('close');
 };
 
@@ -282,7 +363,8 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   detailController?.abort();
-  pauseVideo();
+  setBackgroundPlaybackState(false);
+  releaseVideo();
   document.body.style.overflow = previousBodyOverflow;
   window.removeEventListener('keydown', handleKeydown);
   previouslyFocused?.focus?.();
@@ -298,7 +380,6 @@ onBeforeUnmount(() => {
   place-items: center;
   padding: 1.5rem;
   background: rgba(17, 12, 10, 0.82);
-  backdrop-filter: blur(8px);
   animation: viewerFade 0.22s ease-out;
 }
 
@@ -306,15 +387,16 @@ onBeforeUnmount(() => {
   position: relative;
   display: grid;
   width: min(1220px, 96vw);
-  max-height: min(90vh, 860px);
+  height: min(90vh, 860px);
+  height: min(90dvh, 860px);
   grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.78fr);
+  grid-template-rows: minmax(0, 1fr);
   overflow: hidden;
   border: 1px solid rgba(242, 182, 137, 0.3);
   border-radius: 26px;
   background: var(--surface-glass-strong);
   box-shadow: 0 34px 100px rgba(0, 0, 0, 0.46);
   outline: none;
-  backdrop-filter: blur(24px);
   animation: viewerRise 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -340,6 +422,7 @@ onBeforeUnmount(() => {
 
 .media-panel {
   display: flex;
+  height: 100%;
   min-width: 0;
   min-height: 0;
   flex-direction: column;
@@ -350,20 +433,52 @@ onBeforeUnmount(() => {
 .media-stage {
   position: relative;
   display: grid;
+  width: 100%;
   min-height: 0;
+  min-width: 0;
   flex: 1;
   place-items: center;
   overflow: hidden;
+  contain: layout paint;
 }
 
 .media-stage img,
 .media-stage video {
+  display: block;
   width: 100%;
   height: 100%;
-  max-height: calc(90vh - 98px);
-  display: block;
+  min-width: 0;
+  min-height: 0;
+  max-width: none;
+  max-height: none;
   object-fit: contain;
   background: #0d0b0a;
+}
+
+.video-buffering {
+  position: absolute;
+  z-index: 3;
+  inset: 50% auto auto 50%;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(18, 13, 11, 0.82);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 750;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.video-buffering span {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #f2b689;
+  border-radius: 50%;
+  animation: detailSpin 0.75s linear infinite;
 }
 
 .document-link {
@@ -418,8 +533,9 @@ onBeforeUnmount(() => {
 
 .thumbnail-strip {
   display: flex;
+  height: 98px;
+  flex: 0 0 98px;
   gap: 0.65rem;
-  min-height: 98px;
   padding: 0.75rem;
   overflow-x: auto;
   background: #100d0c;
@@ -454,9 +570,13 @@ onBeforeUnmount(() => {
 .thumbnail-type svg { width: 22px; }
 
 .content-panel {
+  height: 100%;
+  min-width: 0;
   min-height: 0;
   padding: 3.2rem 2.25rem 2.3rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   background:
     radial-gradient(circle at 90% 5%, rgba(242, 182, 137, 0.18), transparent 28%),
     var(--surface-glass-strong);
@@ -579,23 +699,33 @@ onBeforeUnmount(() => {
 
   .viewer-dialog {
     width: 100%;
-    max-height: 94vh;
+    height: 94vh;
+    height: 94dvh;
     grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
     overflow-y: auto;
+    overscroll-behavior: contain;
     border-radius: 24px 24px 0 0;
   }
 
-  .media-panel { min-height: min(62vh, 540px); overflow: visible; }
-  .media-stage { min-height: 380px; }
-  .media-stage img, .media-stage video { max-height: 62vh; }
-  .content-panel { overflow: visible; padding: 2rem 1.4rem 2.4rem; }
+  .media-panel {
+    height: clamp(280px, 56vh, 540px);
+    height: clamp(280px, 56dvh, 540px);
+    min-height: 0;
+    overflow: hidden;
+  }
+  .media-stage { min-height: 0; }
+  .content-panel { height: auto; overflow: visible; padding: 2rem 1.4rem 2.4rem; }
   .close-button { position: fixed; top: 1rem; right: 1rem; }
 }
 
 @media (max-width: 520px) {
-  .media-panel { min-height: 46vh; }
-  .media-stage { min-height: 300px; }
-  .thumbnail-strip { min-height: 82px; }
+  .media-panel {
+    height: clamp(240px, 50vh, 440px);
+    height: clamp(240px, 50dvh, 440px);
+    min-height: 0;
+  }
+  .thumbnail-strip { height: 82px; flex-basis: 82px; }
   .thumbnail { width: 72px; min-width: 72px; }
   .media-nav { width: 42px; height: 42px; }
 }

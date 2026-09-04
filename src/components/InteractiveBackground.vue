@@ -1,5 +1,5 @@
 <template>
-  <div class="interactive-bg" ref="bgContainer">
+  <div ref="bgContainer" class="interactive-bg" :class="{ 'playback-paused': playbackPaused }">
     <!-- Wave/Liquid Background -->
     <svg class="wave-bg" viewBox="0 0 1200 800" preserveAspectRatio="none">
       <defs>
@@ -37,13 +37,6 @@
       />
     </div>
 
-    <!-- Mouse Glow Effect -->
-    <div
-      class="mouse-glow"
-      :class="{ visible: hasPointer }"
-      :style="mouseGlowStyle"
-    />
-
     <!-- Animated Particles -->
     <div class="particles">
       <div
@@ -62,6 +55,12 @@
       />
     </div>
   </div>
+
+  <!-- Kept outside the negative background stacking context so the pointer
+       trail remains visible above section surfaces. -->
+  <div class="pointer-trail" :class="{ visible: hasPointer && !playbackPaused }" aria-hidden="true">
+    <div class="mouse-glow" :style="mouseGlowStyle" />
+  </div>
 </template>
 
 <script setup>
@@ -73,6 +72,10 @@ const mouseY = ref(0);
 const hasPointer = ref(false);
 const prefersReducedMotion = ref(false);
 const waveTime = ref(0);
+const playbackPaused = ref(false);
+const activePlaybackSources = new Set();
+
+const HALO_RADIUS = 110;
 
 let targetMouseX = 0;
 let targetMouseY = 0;
@@ -128,7 +131,6 @@ const geometricShapes = ref([
 // Mouse glow effect
 const mouseGlowStyle = computed(() => ({
   transform: `translate3d(${mouseX.value}px, ${mouseY.value}px, 0)`,
-  boxShadow: `0 0 80px 40px rgba(238, 145, 82, 0.15), 0 0 120px 60px rgba(242, 182, 137, 0.1)`
 }));
 
 // Particles
@@ -149,8 +151,8 @@ function generateParticles() {
 const handlePointerMove = (event) => {
   if (event.pointerType === 'touch') return;
 
-  targetMouseX = event.clientX - 40;
-  targetMouseY = event.clientY - 40;
+  targetMouseX = event.clientX - HALO_RADIUS;
+  targetMouseY = event.clientY - HALO_RADIUS;
 
   // Place the glow at the pointer immediately when it first appears. Smoothing
   // only applies to subsequent movement, so it never travels from the corner.
@@ -173,6 +175,29 @@ const handleMotionPreference = (event) => {
   prefersReducedMotion.value = event.matches;
 };
 
+const handleMediaPlayback = (event) => {
+  const source = event.detail?.source || 'legacy-media-player';
+
+  if (event.detail?.reset) {
+    activePlaybackSources.clear();
+  } else if (event.detail?.active) {
+    activePlaybackSources.add(source);
+  } else {
+    activePlaybackSources.delete(source);
+  }
+
+  const wasPaused = playbackPaused.value;
+  playbackPaused.value = activePlaybackSources.size > 0;
+
+  // The glow is intentionally hidden during playback. When playback stops,
+  // restore it at the current pointer instead of letting it trail in from its
+  // pre-video position.
+  if (wasPaused && !playbackPaused.value && hasPointer.value) {
+    mouseX.value = targetMouseX;
+    mouseY.value = targetMouseY;
+  }
+};
+
 // Animation loop
 const animate = (frameTime) => {
   const elapsed = previousFrameTime
@@ -180,9 +205,11 @@ const animate = (frameTime) => {
     : 16;
   previousFrameTime = frameTime;
 
-  waveTime.value += 1;
+  if (!playbackPaused.value) {
+    waveTime.value += 1;
+  }
 
-  if (hasPointer.value) {
+  if (hasPointer.value && !playbackPaused.value) {
     // This produces a subtle trail with consistent timing across refresh rates.
     const smoothing = prefersReducedMotion.value
       ? 1
@@ -202,6 +229,7 @@ onMounted(() => {
   window.addEventListener('pointermove', handlePointerMove, { passive: true });
   window.addEventListener('pointerout', handlePointerOut, { passive: true });
   window.addEventListener('resize', handleResize);
+  window.addEventListener('portfolio-media-playback', handleMediaPlayback);
   animationFrameId = requestAnimationFrame(animate);
 });
 
@@ -211,6 +239,7 @@ onUnmounted(() => {
   window.removeEventListener('pointermove', handlePointerMove);
   window.removeEventListener('pointerout', handlePointerOut);
   window.removeEventListener('resize', handleResize);
+  window.removeEventListener('portfolio-media-playback', handleMediaPlayback);
 });
 </script>
 
@@ -227,8 +256,14 @@ onUnmounted(() => {
   transition: background-color 0.5s ease;
 }
 
+.interactive-bg.playback-paused .shape,
+.interactive-bg.playback-paused .particle {
+  animation-play-state: paused;
+}
+
 .wave-bg {
   position: absolute;
+  z-index: 0;
   top: 0;
   left: 0;
   width: 100%;
@@ -237,6 +272,7 @@ onUnmounted(() => {
 
 .geometric-shapes {
   position: absolute;
+  z-index: 1;
   top: 0;
   left: 0;
   width: 100%;
@@ -282,37 +318,60 @@ onUnmounted(() => {
   }
 }
 
+.pointer-trail {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
 .mouse-glow {
   position: fixed;
   top: 0;
   left: 0;
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
   pointer-events: none;
-  mix-blend-mode: screen;
   opacity: 0;
-  transition: opacity 0.18s ease-out;
-  filter: blur(40px);
   will-change: transform, opacity;
 }
 
-.mouse-glow.visible {
+.mouse-glow {
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(238, 145, 82, 0.42) 0%,
+    rgba(242, 182, 137, 0.24) 26%,
+    rgba(238, 145, 82, 0.12) 48%,
+    transparent 72%
+  );
+  filter: blur(8px);
+  transition: opacity 0.16s ease-out;
+}
+
+.pointer-trail.visible .mouse-glow {
   opacity: 1;
 }
 
 [data-theme='dark'] .mouse-glow {
-  mix-blend-mode: lighten;
+  background: radial-gradient(
+    circle,
+    rgba(242, 182, 137, 0.46) 0%,
+    rgba(238, 145, 82, 0.27) 26%,
+    rgba(242, 182, 137, 0.13) 48%,
+    transparent 72%
+  );
 }
 
 @media (hover: none), (pointer: coarse) {
-  .mouse-glow {
+  .pointer-trail {
     display: none;
   }
 }
 
 .particles {
   position: absolute;
+  z-index: 2;
   top: 0;
   left: 0;
   width: 100%;

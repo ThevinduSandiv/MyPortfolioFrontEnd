@@ -118,7 +118,11 @@
               :src="selectedMedia.url"
               controls
               playsinline
-              @error="handleMediaError(selectedMedia)"
+              preload="auto"
+              @playing="setBackgroundPlaybackState(true)"
+              @pause="setBackgroundPlaybackState(false)"
+              @ended="setBackgroundPlaybackState(false)"
+              @error="handleViewerMediaError(selectedMedia)"
             />
             <iframe
               v-else-if="!isFailed(selectedMedia)"
@@ -180,6 +184,7 @@ let dragStartScroll = 0;
 let dragDistance = 0;
 let suppressClick = false;
 let previouslyFocusedElement = null;
+const playbackSource = `media-gallery-${Math.random().toString(36).slice(2)}`;
 
 const safeMedia = computed(() =>
   (Array.isArray(props.media) ? props.media : []).filter(
@@ -209,6 +214,11 @@ const handleMediaError = (media) => {
 
   failedUrls.value = new Set(failedUrls.value).add(key);
   emit('media-error', media);
+};
+
+const handleViewerMediaError = (media) => {
+  setBackgroundPlaybackState(false);
+  handleMediaError(media);
 };
 
 const measureOverflow = async () => {
@@ -311,9 +321,16 @@ const openViewer = async (media) => {
 };
 
 const closeViewer = () => {
+  setBackgroundPlaybackState(false);
   selectedMediaId.value = null;
   emit('viewer-change', false);
   nextTick(() => previouslyFocusedElement?.focus?.());
+};
+
+const setBackgroundPlaybackState = (active) => {
+  window.dispatchEvent(new CustomEvent('portfolio-media-playback', {
+    detail: { active, source: playbackSource }
+  }));
 };
 
 const handleKeydown = (event) => {
@@ -355,6 +372,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  setBackgroundPlaybackState(false);
   cancelAnimationFrame(animationFrame);
   resizeObserver?.disconnect();
   motionQuery?.removeEventListener?.('change', handleMotionChange);
@@ -523,7 +541,6 @@ onBeforeUnmount(() => {
   place-items: center;
   padding: 1.5rem;
   background: rgba(13, 11, 10, 0.82);
-  backdrop-filter: blur(3px);
 }
 
 .viewer-dialog {
@@ -565,17 +582,26 @@ onBeforeUnmount(() => {
 }
 
 .viewer-stage {
+  position: relative;
   display: grid;
+  width: 100%;
   min-height: 0;
+  min-width: 0;
   flex: 1;
   place-items: center;
+  overflow: hidden;
+  contain: layout paint;
 }
 
 .viewer-stage img,
 .viewer-stage video {
   display: block;
-  max-width: 100%;
-  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  max-width: none;
+  max-height: none;
   object-fit: contain;
 }
 

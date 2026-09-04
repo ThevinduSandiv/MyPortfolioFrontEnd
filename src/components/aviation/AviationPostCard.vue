@@ -1,5 +1,6 @@
 <template>
   <article
+    ref="cardRef"
     :class="[
       'aviation-card',
       `type-${post.post_type}`,
@@ -24,7 +25,8 @@
         />
         <video
           v-else-if="primaryMedia.media_type === 'video'"
-          :src="primaryMedia.url"
+          ref="previewVideoRef"
+          :src="previewVideoSrc"
           :poster="posterImage?.url"
           muted
           playsinline
@@ -70,18 +72,26 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 const props = defineProps({
   post: {
     type: Object,
     required: true
+  },
+  suspendVideo: {
+    type: Boolean,
+    default: false
   }
 });
 
 const emit = defineEmits(['open', 'media-error']);
+const cardRef = ref(null);
+const previewVideoRef = ref(null);
 const isPortrait = ref(false);
 const mediaFailed = ref(false);
+const videoIsNearViewport = ref(false);
+let videoObserver = null;
 
 const primaryMedia = computed(() => Array.isArray(props.post.media) ? props.post.media[0] : null);
 const posterImage = computed(() =>
@@ -89,6 +99,13 @@ const posterImage = computed(() =>
     ? props.post.media.find((item) => item.media_type === 'image')
     : null
 );
+const previewVideoSrc = computed(() => (
+  primaryMedia.value?.media_type === 'video'
+  && videoIsNearViewport.value
+  && !props.suspendVideo
+    ? primaryMedia.value.url
+    : undefined
+));
 const visibleTags = computed(() => Array.isArray(props.post.tags) ? props.post.tags.slice(0, 3) : []);
 const typeLabel = computed(() => ({ moment: 'Moment', story: 'Story', article: 'Article' })[props.post.post_type] || 'Journal');
 const displayDateValue = computed(() => props.post.event_date || props.post.published_at || '');
@@ -116,6 +133,34 @@ const handleMediaError = (media) => {
 watch(() => primaryMedia.value?.url, () => {
   mediaFailed.value = false;
 });
+
+watch(() => props.suspendVideo, (suspended) => {
+  if (!suspended) return;
+  previewVideoRef.value?.pause?.();
+});
+
+onMounted(() => {
+  if (primaryMedia.value?.media_type !== 'video') return;
+
+  if (!('IntersectionObserver' in window)) {
+    videoIsNearViewport.value = true;
+    return;
+  }
+
+  videoObserver = new IntersectionObserver(([entry]) => {
+    if (!entry?.isIntersecting) return;
+    videoIsNearViewport.value = true;
+    videoObserver?.disconnect();
+    videoObserver = null;
+  }, { rootMargin: '400px 0px' });
+
+  if (cardRef.value) videoObserver.observe(cardRef.value);
+});
+
+onBeforeUnmount(() => {
+  previewVideoRef.value?.pause?.();
+  videoObserver?.disconnect();
+});
 </script>
 
 <style scoped>
@@ -142,6 +187,10 @@ watch(() => primaryMedia.value?.url, () => {
 
 .aviation-card.featured {
   grid-column: span 8;
+}
+
+.aviation-card.featured.portrait {
+  grid-column: span 4;
 }
 
 .aviation-card.type-story:not(.featured),
@@ -322,6 +371,7 @@ watch(() => primaryMedia.value?.url, () => {
   .aviation-card,
   .aviation-card.portrait:not(.featured) { grid-column: span 6; }
   .aviation-card.featured { grid-column: span 12; }
+  .aviation-card.featured.portrait { grid-column: span 6; }
 }
 
 @media (max-width: 680px) {

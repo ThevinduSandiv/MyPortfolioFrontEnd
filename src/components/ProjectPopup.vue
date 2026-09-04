@@ -1,4 +1,5 @@
 <template>
+  <Teleport to="body">
   <div class="popup-overlay" @click.self="closePopup">
     <article
       ref="dialogRef"
@@ -55,6 +56,7 @@
       </div>
     </article>
   </div>
+  </Teleport>
 </template>
 
 <script setup>

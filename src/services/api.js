@@ -36,6 +36,16 @@ const requestJson = async (url, options = {}) => {
 };
 
 export const api = {
+  // Startup endpoint. The caller deliberately checks for an exact HTTP 200
+  // before allowing the portfolio to render.
+  async checkBackendHealth(signal) {
+    return fetch(`${API_BASE_URL}/Test`, {
+      method: 'HEAD',
+      cache: 'no-store',
+      signal
+    });
+  },
+
   // Portfolio Endpoints
   async getTagline() {
     try {
