@@ -1,4 +1,5 @@
 <template>
+  <Teleport to="body">
   <div class="popup-overlay" @click.self="$emit('close')">
     <div class="popup-content">
       <button class="close-btn" @click="$emit('close')">✕</button>
@@ -24,6 +25,7 @@
       </div>
     </div>
   </div>
+  </Teleport>
 </template>
 
 <script setup>

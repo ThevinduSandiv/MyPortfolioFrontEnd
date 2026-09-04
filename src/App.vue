@@ -1,15 +1,19 @@
 <template>
   <div class="app-container" :data-theme="currentTheme">
-    <InteractiveBackground />
+    <Transition name="startup-fade">
+      <StartupLoader v-if="!startupReady" :theme="currentTheme" @ready="startupReady = true" />
+    </Transition>
+
+    <InteractiveBackground v-if="startupReady" />
     
     <!-- Floating CV Download Button -->
-    <div class="floating-cv-button" @click="downloadCV" title="Download CV">
+    <div v-if="startupReady" class="floating-cv-button" @click="downloadCV" title="Download CV">
       <div class="pulse-ring"></div>
       <span class="cv-icon">📄</span>
     </div>
 
     <!-- Header with Logo and Theme Toggle -->
-    <header class="app-header">
+    <header v-if="startupReady" class="app-header">
       <div class="header-content">
         <h1 class="logo-text">Thevindu Hennayake</h1>
         <div class="header-actions">
@@ -32,7 +36,7 @@
     </header>
 
     <button
-      v-if="isMobile"
+      v-if="startupReady && isMobile"
       class="nav-backdrop"
       :class="{ visible: mobileMenuOpen }"
       type="button"
@@ -42,7 +46,7 @@
     ></button>
 
     <!-- Navigation -->
-    <nav id="primary-navigation" class="app-nav" :class="{ 'mobile-open': mobileMenuOpen }">
+    <nav v-if="startupReady" id="primary-navigation" class="app-nav" :class="{ 'mobile-open': mobileMenuOpen }">
       <div class="nav-content">
         <div class="nav-main">
           <button
@@ -75,15 +79,15 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="app-main">
+    <main v-if="startupReady" class="app-main">
       <component :is="currentComponent" :key="selectedPage.id" :toastRef="toastContainer" />
     </main>
 
     <!-- Footer -->
-    <FooterSection />
+    <FooterSection v-if="startupReady" />
     
     <!-- Toast Container -->
-    <ToastContainer ref="toastContainer" />
+    <ToastContainer v-if="startupReady" ref="toastContainer" />
   </div>
 </template>
 
@@ -92,15 +96,24 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import ThemeToggle from '@/components/ThemeToggle.vue';
 import FooterSection from '@/components/FooterSection.vue';
 import InteractiveBackground from '@/components/InteractiveBackground.vue';
+import StartupLoader from '@/components/StartupLoader.vue';
 import ToastContainer from '@/components/ToastContainer.vue';
 import HomeSection from '@/components/HomeSection.vue';
 import AboutSection from '@/components/AboutSection.vue';
 import ProjectsSection from '@/components/ProjectsSection.vue';
 import ExperienceSection from '@/components/ExperienceSection.vue';
 import ContactSection from '@/components/ContactSection.vue';
+import AviationSection from '@/components/AviationSection.vue';
 import ComingSoon from '@/components/ComingSoon.vue';
 
-const currentTheme = ref('light');
+const getInitialTheme = () => {
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+};
+
+const currentTheme = ref(getInitialTheme());
+const startupReady = ref(false);
 const selectedPage = ref({ id: 1, label: 'Home' });
 const mobileMenuOpen = ref(false);
 const isMobile = ref(false);
@@ -125,12 +138,15 @@ const currentComponent = computed(() => {
     case 3: return ProjectsSection;
     case 4: return ExperienceSection;
     case 5: return ContactSection;
-    case 6: return ComingSoon;
+    case 6: return AviationSection;
     default: return ComingSoon;
   }
 });
 
 const selectPage = (page) => {
+  window.dispatchEvent(new CustomEvent('portfolio-media-playback', {
+    detail: { reset: true }
+  }));
   selectedPage.value = page;
   mobileMenuOpen.value = false;
   window.scrollTo(0, 0);
@@ -179,17 +195,11 @@ const downloadCV = () => {
 };
 
 onMounted(() => {
+  document.documentElement.setAttribute('data-theme', currentTheme.value);
   checkScreenSize();
   window.addEventListener('resize', checkScreenSize);
   window.addEventListener('keydown', handleEscape);
   
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const savedTheme = localStorage.getItem('theme');
-  if (savedTheme) {
-    currentTheme.value = savedTheme;
-  } else if (prefersDark) {
-    currentTheme.value = 'dark';
-  }
 });
 
 onUnmounted(() => {
@@ -210,6 +220,15 @@ onUnmounted(() => {
   position: relative;
   isolation: isolate;
   overflow: hidden;
+}
+
+.startup-fade-leave-active {
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+.startup-fade-leave-to {
+  opacity: 0;
+  transform: scale(1.015);
 }
 
 .app-container::before {
