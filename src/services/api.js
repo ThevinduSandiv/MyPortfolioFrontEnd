@@ -1,5 +1,5 @@
 // src/services/api.js
-const API_BASE_URL = 'https://portfoliobackend-ts7g.onrender.com/api';
+const API_BASE_URL = 'https://server.thevinduhennayake.com/api';
 const FRESH_CONTENT_OPTIONS = { cache: 'no-store' };
 
 const handleError = (error) => {
